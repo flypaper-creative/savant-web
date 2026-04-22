@@ -377,6 +377,7 @@ class MechaRing {
     this.buildArmor();
     this.buildPanels();
     this.buildProgressLEDs();
+    this.buildVisibleLEDs();
   }
 
   buildArmor() {
@@ -482,6 +483,56 @@ class MechaRing {
     }
   }
 
+  buildVisibleLEDs() {
+    this.visibleLedCount = 96;
+    this.visibleLeds = [];
+
+    const ledGeo = new THREE.BoxGeometry(0.040, 0.014, 0.016);
+    const glowGeo = new THREE.BoxGeometry(0.028, 0.010, 0.010);
+
+    for (let i = 0; i < this.visibleLedCount; i++) {
+      const a = Math.PI / 2 - (i / this.visibleLedCount) * Math.PI * 2;
+      const radius = CFG.ringRadius - 0.15;
+
+      const body = new THREE.Mesh(
+        ledGeo,
+        new THREE.MeshPhysicalMaterial({
+          color: 0x090a0c,
+          metalness: 1.0,
+          roughness: 0.08,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.012,
+          envMapIntensity: 2.2
+        })
+      );
+      body.position.set(
+        Math.cos(a) * radius,
+        Math.sin(a) * radius,
+        0.24
+      );
+      body.rotation.z = a;
+      this.rig.add(body);
+
+      const emitter = new THREE.Mesh(
+        glowGeo,
+        new THREE.MeshBasicMaterial({
+          color: 0xffc86a,
+          transparent: true,
+          opacity: 0.08
+        })
+      );
+      emitter.position.set(
+        Math.cos(a) * radius,
+        Math.sin(a) * radius,
+        0.255
+      );
+      emitter.rotation.z = a;
+      this.rig.add(emitter);
+
+      this.visibleLeds.push({ body, emitter });
+    }
+  }
+
   update(t, progress = 0) {
     this.coreOuter.rotation.z += 0.00024;
     this.coreMid.rotation.z -= 0.00009;
@@ -496,6 +547,7 @@ class MechaRing {
     }
 
     const p = clamp(progress, 0, 1);
+
     const front = p * this.ledCount;
     const litCount = Math.floor(front);
     const frac = front - litCount;
@@ -506,17 +558,42 @@ class MechaRing {
       else if (i === litCount) level = frac;
 
       this.leds[i].housing.material.color.setRGB(
-        0.05 + level * 0.42,
-        0.04 + level * 0.26,
-        0.03 + level * 0.10
+        0.06 + level * 0.52,
+        0.05 + level * 0.30,
+        0.04 + level * 0.10
       );
 
-      this.leds[i].emitter.material.opacity = 0.06 + level * 0.94;
+      this.leds[i].emitter.material.opacity = 0.08 + level * 0.92;
       this.leds[i].emitter.material.color.setRGB(
         1.0,
-        0.82 + level * 0.12,
-        0.38 + level * 0.08
+        0.84 + level * 0.12,
+        0.42 + level * 0.08
       );
+    }
+
+    if (this.visibleLeds) {
+      const front2 = p * this.visibleLedCount;
+      const litCount2 = Math.floor(front2);
+      const frac2 = front2 - litCount2;
+
+      for (let i = 0; i < this.visibleLedCount; i++) {
+        let level = 0;
+        if (i < litCount2) level = 1;
+        else if (i == litCount2) level = frac2;
+
+        this.visibleLeds[i].body.material.color.setRGB(
+          0.07 + level * 0.46,
+          0.06 + level * 0.26,
+          0.05 + level * 0.08
+        );
+
+        this.visibleLeds[i].emitter.material.opacity = 0.10 + level * 0.90;
+        this.visibleLeds[i].emitter.material.color.setRGB(
+          1.0,
+          0.86 + level * 0.10,
+          0.48 + level * 0.06
+        );
+      }
     }
   }
 }
