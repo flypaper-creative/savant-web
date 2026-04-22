@@ -17,11 +17,11 @@ const els = {
 if (!els.canvas) throw new Error('Missing #bg3d');
 
 const CFG = {
-  preloadMs: 7800,
+  preloadMs: 10000,
   dpr: Math.min(window.devicePixelRatio || 1, 2),
   exposure: 1.02,
-  bloomMin: 0.08,
-  bloomMax: 0.18,
+  bloomMin: 0.16,
+  bloomMax: 0.34,
   worldY: 0.08,
   worldZ: -2.55,
   ringRadius: 2.34,
@@ -378,6 +378,7 @@ class MechaRing {
     this.buildPanels();
     this.buildProgressLEDs();
     this.buildVisibleLEDs();
+    this.buildLEDGlows();
   }
 
   buildArmor() {
@@ -466,9 +467,9 @@ class MechaRing {
       const emitter = new THREE.Mesh(
         emitterGeo,
         new THREE.MeshBasicMaterial({
-          color: 0xffd27a,
+          color: 0xffdc92,
           transparent: true,
-          opacity: 0.08
+          opacity: 0.16
         })
       );
       emitter.position.set(
@@ -497,12 +498,12 @@ class MechaRing {
       const body = new THREE.Mesh(
         ledGeo,
         new THREE.MeshPhysicalMaterial({
-          color: 0x090a0c,
+          color: 0x120f0a,
           metalness: 1.0,
-          roughness: 0.08,
+          roughness: 0.04,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.012,
-          envMapIntensity: 2.2
+          clearcoatRoughness: 0.008,
+          envMapIntensity: 3.0
         })
       );
       body.position.set(
@@ -516,9 +517,9 @@ class MechaRing {
       const emitter = new THREE.Mesh(
         glowGeo,
         new THREE.MeshBasicMaterial({
-          color: 0xffc86a,
+          color: 0xffd78a,
           transparent: true,
-          opacity: 0.08
+          opacity: 0.18
         })
       );
       emitter.position.set(
@@ -530,6 +531,24 @@ class MechaRing {
       this.rig.add(emitter);
 
       this.visibleLeds.push({ body, emitter });
+    }
+  }
+
+  buildLEDGlows() {
+    this.ledGlows = [];
+
+    for (let i = 0; i < this.visibleLedCount; i++) {
+      const glow = makeRadialSprite([
+        [0.00, 'rgba(255,244,210,0.95)'],
+        [0.10, 'rgba(255,214,140,0.48)'],
+        [0.24, 'rgba(255,170,70,0.16)'],
+        [1.00, 'rgba(255,255,255,0.0)']
+      ], 0.16, 0.05, 512);
+
+      const pos = this.visibleLeds[i].emitter.position;
+      glow.position.set(pos.x, pos.y, pos.z + 0.014);
+      this.rig.add(glow);
+      this.ledGlows.push(glow);
     }
   }
 
@@ -563,7 +582,7 @@ class MechaRing {
         0.04 + level * 0.10
       );
 
-      this.leds[i].emitter.material.opacity = 0.08 + level * 0.92;
+      this.leds[i].emitter.material.opacity = 0.14 + level * 0.86;
       this.leds[i].emitter.material.color.setRGB(
         1.0,
         0.84 + level * 0.12,
@@ -582,17 +601,26 @@ class MechaRing {
         else if (i == litCount2) level = frac2;
 
         this.visibleLeds[i].body.material.color.setRGB(
-          0.07 + level * 0.46,
-          0.06 + level * 0.26,
-          0.05 + level * 0.08
+          0.10 + level * 0.72,
+          0.08 + level * 0.42,
+          0.05 + level * 0.12
         );
 
-        this.visibleLeds[i].emitter.material.opacity = 0.10 + level * 0.90;
+        this.visibleLeds[i].emitter.material.opacity = 0.18 + level * 0.82;
         this.visibleLeds[i].emitter.material.color.setRGB(
           1.0,
-          0.86 + level * 0.10,
-          0.48 + level * 0.06
+          0.90 + level * 0.08,
+          0.58 + level * 0.08
         );
+
+        if (this.ledGlows) {
+          this.ledGlows[i].material.opacity = 0.03 + level * 0.34;
+          this.ledGlows[i].scale.set(
+            0.12 + level * 0.10,
+            0.12 + level * 0.10,
+            1
+          );
+        }
       }
     }
   }
@@ -617,8 +645,8 @@ class Flare {
   }
 
   update(t) {
-    this.center.material.opacity = 0.030 + Math.sin(t * 0.55) * 0.003;
-    this.horiz.material.opacity = 0.028 + Math.sin(t * 0.46 + 0.4) * 0.0025;
+    this.center.material.opacity = 0.040 + Math.sin(t * 0.55) * 0.004;
+    this.horiz.material.opacity = 0.036 + Math.sin(t * 0.46 + 0.4) * 0.003;
   }
 }
 
