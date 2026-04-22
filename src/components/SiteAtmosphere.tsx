@@ -1,35 +1,24 @@
+import React from 'react';
+import { motion } from 'motion/react';
+
 export default function SiteAtmosphere() {
   return (
-    <>
-      <div className="fixed inset-0 pointer-events-none z-[9999]">
-        <div className="noise-overlay" />
-        <div className="scanlines-overlay" />
-        <div className="neural-lattice-overlay opacity-10" />
-        <div className="vignette-heavy" />
-      </div>
+    <div className="fixed inset-0 z-[50] pointer-events-none overflow-hidden">
+      <motion.div
+        animate={{ top: ['-10%', '110%'] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+        className="absolute left-0 w-full h-[1px] bg-gold/10 shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+      />
 
-      <div className="anamorphic-flare" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_16%,rgba(3,3,3,0.82)_100%)]" />
+      <div className="absolute inset-0 opacity-10 neural-lattice-overlay" />
+      <div className="absolute inset-0 atmosphere-prismatic" />
 
-      <div className="grid-overlay">
-        <div className="grid-line horizontal top-1/4" />
-        <div className="grid-line horizontal top-1/2" />
-        <div className="grid-line horizontal top-3/4" />
-        <div className="grid-line vertical left-1/4" />
-        <div className="grid-line vertical left-1/2" />
-        <div className="grid-line vertical left-3/4" />
-      </div>
-
-      <div className="corner-accent tl" />
-      <div className="corner-accent tr" />
-      <div className="corner-accent bl" />
-      <div className="corner-accent br" />
-
-      <div className="telemetry-hud left">
-        signal integrity // recursive field // live
-      </div>
-      <div className="telemetry-hud right">
-        savant // sovereign interface lattice
-      </div>
-    </>
-  )
+      <motion.div
+        animate={{ opacity: [0, 0.05, 0, 0.02, 0] }}
+        transition={{ duration: 10, repeat: Infinity, times: [0, 0.1, 0.12, 0.5, 1] }}
+        className="absolute inset-0 bg-neon-pink/5 mix-blend-overlay"
+      />
+    </div>
+  );
 }
