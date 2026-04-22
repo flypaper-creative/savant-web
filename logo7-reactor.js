@@ -19,14 +19,14 @@ if (!els.canvas) throw new Error('Missing #bg3d');
 const CFG = {
   preloadMs: 10000,
   dpr: Math.min(window.devicePixelRatio || 1, 2),
-  exposure: 1.02,
-  bloomMin: 0.16,
-  bloomMax: 0.34,
-  worldY: 0.08,
+  exposure: 1.01,
+  bloomMin: 0.08,
+  bloomMax: 0.18,
+  worldY: 0.10,
   worldZ: -2.55,
-  ringRadius: 2.34,
-  logoTargetSize: 1.86,
-  chamberRadius: 7.0,
+  ringRadius: 2.36,
+  logoTargetSize: 1.88,
+  chamberRadius: 7.2,
   chamberDepth: 12.0,
 };
 
@@ -74,7 +74,7 @@ function makeRadialSprite(stops, size, opacity, texSize = 1024) {
   return s;
 }
 
-function makeHorizontalFlare(width = 4.8, height = 0.05, opacity = 0.026) {
+function makeHorizontalFlare(width = 5.0, height = 0.05, opacity = 0.022) {
   const tex = makeCanvasTexture((g, w, h) => {
     const grad = g.createLinearGradient(0, h / 2, w, h / 2);
     grad.addColorStop(0.00, 'rgba(255,255,255,0.0)');
@@ -85,6 +85,30 @@ function makeHorizontalFlare(width = 4.8, height = 0.05, opacity = 0.026) {
     g.fillStyle = grad;
     g.fillRect(0, 0, w, h);
   }, 1024);
+
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const s = new THREE.Sprite(mat);
+  s.scale.set(width, height, 1);
+  return s;
+}
+
+function makeVerticalScanSprite(width = 4.8, height = 0.10, opacity = 0.045) {
+  const tex = makeCanvasTexture((g, w, h) => {
+    const grad = g.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0.00, 'rgba(255,255,255,0.0)');
+    grad.addColorStop(0.50, 'rgba(255,240,210,0.95)');
+    grad.addColorStop(1.00, 'rgba(255,255,255,0.0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, w, h);
+  }, 512);
 
   const mat = new THREE.SpriteMaterial({
     map: tex,
@@ -122,7 +146,7 @@ function darkArmorMaterial() {
   });
 }
 
-function goldTraceMaterial(opacity = 0.28) {
+function goldTraceMaterial(opacity = 0.22) {
   return new THREE.MeshBasicMaterial({
     color: 0xd4a24f,
     transparent: true,
@@ -182,15 +206,15 @@ class Runtime {
     this.key.position.set(0.0, 2.2, 5.8);
     this.scene.add(this.key);
 
-    this.fill = new THREE.PointLight(0xf7f9ff, 1.7, 12);
+    this.fill = new THREE.PointLight(0xf7f9ff, 1.6, 12);
     this.fill.position.set(-1.4, 0.0, 4.8);
     this.scene.add(this.fill);
 
-    this.rim = new THREE.PointLight(0xffffff, 10.8, 20);
+    this.rim = new THREE.PointLight(0xffffff, 10.2, 20);
     this.rim.position.set(1.4, 1.6, -2.9);
     this.scene.add(this.rim);
 
-    this.goldKick = new THREE.PointLight(0xffe1a0, 1.4, 8);
+    this.goldKick = new THREE.PointLight(0xffe1a0, 1.1, 8);
     this.goldKick.position.set(0, -1.85, 2.4);
     this.scene.add(this.goldKick);
 
@@ -241,12 +265,17 @@ class Runtime {
     const target = clamp(elapsed / CFG.preloadMs, 0, 1);
 
     if (!STATE.loaded) {
-      STATE.progress += (Math.min(target, 0.92) - STATE.progress) * 0.03;
+      STATE.progress += (Math.min(target, 0.92) - STATE.progress) * 0.022;
     } else {
-      STATE.progress += (1 - STATE.progress) * 0.04;
+      STATE.progress += (1 - STATE.progress) * 0.026;
     }
 
-    if (STATE.loaded && STATE.progress > 0.995 && !STATE.ready) {
+    if (STATE.loaded && elapsed < CFG.preloadMs) {
+      STATE.progress = Math.min(STATE.progress, 0.995);
+    }
+
+    if (STATE.loaded && elapsed >= CFG.preloadMs && !STATE.ready) {
+      STATE.progress = 1;
       STATE.ready = true;
       els.initBtn?.classList.add('ready');
     }
@@ -262,7 +291,7 @@ class Runtime {
     const t = performance.now() * 0.001;
 
     this.updateProgress();
-    this.chamber.update(t);
+    this.chamber.update(t, STATE.progress);
     this.ring.update(t, STATE.progress);
     this.logo.update(t, STATE.progress);
     this.flare.update(t);
@@ -299,6 +328,31 @@ class Chamber {
     this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 2.35);
     this.group.add(this.backPlate);
 
+    this.backRings = [];
+    const ringDefs = [
+      { r: 3.26, tube: 0.040, opacity: 0.10, speed: 0.00014 },
+      { r: 3.54, tube: 0.028, opacity: 0.08, speed: -0.00010 },
+      { r: 3.82, tube: 0.020, opacity: 0.06, speed: 0.00008 },
+    ];
+    for (const d of ringDefs) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(d.r, d.tube, 16, 180),
+        new THREE.MeshBasicMaterial({
+          color: 0xcda15a,
+          transparent: true,
+          opacity: d.opacity,
+        })
+      );
+      ring.position.set(0, CFG.worldY, CFG.worldZ - 2.20);
+      ring.userData.speed = d.speed;
+      scene.add(ring);
+      this.backRings.push(ring);
+    }
+
+    this.scanLine = makeVerticalScanSprite(5.0, 0.085, 0.030);
+    this.scanLine.position.set(0, CFG.worldY + 1.55, CFG.worldZ + 0.18);
+    scene.add(this.scanLine);
+
     this.atmo = makeRadialSprite([
       [0.00, 'rgba(255,248,232,0.050)'],
       [0.18, 'rgba(255,226,176,0.020)'],
@@ -307,37 +361,19 @@ class Chamber {
     ], 9.0, 0.048);
     this.atmo.position.set(0, CFG.worldY, CFG.worldZ - 1.45);
     this.group.add(this.atmo);
-
-    this.beams = [];
-    const beamGeo = new THREE.ConeGeometry(0.24, 4.8, 28, 1, true);
-    for (let i = 0; i < 3; i++) {
-      const beam = new THREE.Mesh(
-        beamGeo,
-        new THREE.MeshBasicMaterial({
-          color: 0xffdfa2,
-          transparent: true,
-          opacity: 0.022,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending,
-        })
-      );
-      beam.position.set((i - 1) * 0.82, CFG.worldY + 1.48, CFG.worldZ + 1.58);
-      beam.rotation.x = -Math.PI / 2.28;
-      beam.userData.phase = i * 1.24;
-      this.group.add(beam);
-      this.beams.push(beam);
-    }
   }
 
-  update(t) {
+  update(t, progress) {
     this.atmo.material.opacity = 0.038 + Math.sin(t * 0.20) * 0.004;
-    for (const beam of this.beams) {
-      const t2 = t + beam.userData.phase;
-      beam.position.x = Math.sin(t2 * 0.22) * 0.90;
-      beam.rotation.z = Math.sin(t2 * 0.18) * 0.06;
-      beam.material.opacity = 0.018 + Math.sin(t2 * 0.6) * 0.003;
+
+    for (const ring of this.backRings) {
+      ring.rotation.z += ring.userData.speed;
     }
+
+    const scanStart = CFG.worldY + 1.58;
+    const scanEnd = CFG.worldY - 1.58;
+    this.scanLine.position.y = lerp(scanStart, scanEnd, progress);
+    this.scanLine.material.opacity = 0.024 + Math.sin(t * 0.8) * 0.003;
   }
 }
 
@@ -370,15 +406,13 @@ class MechaRing {
 
     this.goldTrace = new THREE.Mesh(
       new THREE.TorusGeometry(CFG.ringRadius - 0.270, 0.008, 14, 240),
-      goldTraceMaterial(0.34)
+      goldTraceMaterial(0.26)
     );
     this.rig.add(this.goldTrace);
 
     this.buildArmor();
     this.buildPanels();
-    this.buildProgressLEDs();
     this.buildVisibleLEDs();
-    this.buildLEDGlows();
   }
 
   buildArmor() {
@@ -399,7 +433,7 @@ class MechaRing {
 
       const cap = new THREE.Mesh(
         new THREE.BoxGeometry(0.22, 0.06, 0.02),
-        goldTraceMaterial(0.22)
+        goldTraceMaterial(0.16)
       );
       cap.position.z = 0.13;
       seg.add(cap);
@@ -424,7 +458,7 @@ class MechaRing {
 
       const slit = new THREE.Mesh(
         new THREE.BoxGeometry(0.14, 0.012, 0.012),
-        goldTraceMaterial(0.38)
+        goldTraceMaterial(0.22)
       );
       slit.position.z = 0.078;
       g.add(slit);
@@ -434,194 +468,108 @@ class MechaRing {
     }
   }
 
-  buildProgressLEDs() {
-    this.ledCount = 180;
-    this.leds = [];
+  buildVisibleLEDs() {
+    this.visibleLedCount = 56;
+    this.visibleLeds = [];
 
-    const housingGeo = new THREE.BoxGeometry(0.020, 0.009, 0.011);
-    const emitterGeo = new THREE.BoxGeometry(0.016, 0.007, 0.010);
+    const housingGeo = new THREE.BoxGeometry(0.090, 0.030, 0.022);
+    const emitterGeo = new THREE.BoxGeometry(0.068, 0.020, 0.014);
 
-    for (let i = 0; i < this.ledCount; i++) {
-      const a = Math.PI / 2 - (i / this.ledCount) * Math.PI * 2;
-      const radius = CFG.ringRadius - 0.272;
+    for (let i = 0; i < this.visibleLedCount; i++) {
+      const a = Math.PI / 2 - (i / this.visibleLedCount) * Math.PI * 2;
+      const radius = CFG.ringRadius - 0.20;
 
-      const housing = new THREE.Mesh(
+      const body = new THREE.Mesh(
         housingGeo,
         new THREE.MeshPhysicalMaterial({
           color: 0x0a0b0d,
           metalness: 1.0,
-          roughness: 0.10,
+          roughness: 0.08,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.016,
-          envMapIntensity: 2.0,
-        })
-      );
-      housing.position.set(
-        Math.cos(a) * radius,
-        Math.sin(a) * radius,
-        0.19
-      );
-      housing.rotation.z = a;
-      this.rig.add(housing);
-
-      const emitter = new THREE.Mesh(
-        emitterGeo,
-        new THREE.MeshBasicMaterial({
-          color: 0xffdc92,
-          transparent: true,
-          opacity: 0.16
-        })
-      );
-      emitter.position.set(
-        Math.cos(a) * radius,
-        Math.sin(a) * radius,
-        0.205
-      );
-      emitter.rotation.z = a;
-      this.rig.add(emitter);
-
-      this.leds.push({ housing, emitter });
-    }
-  }
-
-  buildVisibleLEDs() {
-    this.visibleLedCount = 96;
-    this.visibleLeds = [];
-
-    const ledGeo = new THREE.BoxGeometry(0.040, 0.014, 0.016);
-    const glowGeo = new THREE.BoxGeometry(0.028, 0.010, 0.010);
-
-    for (let i = 0; i < this.visibleLedCount; i++) {
-      const a = Math.PI / 2 - (i / this.visibleLedCount) * Math.PI * 2;
-      const radius = CFG.ringRadius - 0.15;
-
-      const body = new THREE.Mesh(
-        ledGeo,
-        new THREE.MeshPhysicalMaterial({
-          color: 0x120f0a,
-          metalness: 1.0,
-          roughness: 0.04,
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.008,
-          envMapIntensity: 3.0
+          clearcoatRoughness: 0.012,
+          envMapIntensity: 2.4,
         })
       );
       body.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.24
+        0.245
       );
       body.rotation.z = a;
       this.rig.add(body);
 
       const emitter = new THREE.Mesh(
-        glowGeo,
+        emitterGeo,
         new THREE.MeshBasicMaterial({
-          color: 0xffd78a,
+          color: 0xffd88c,
           transparent: true,
-          opacity: 0.18
+          opacity: 0.10,
         })
       );
       emitter.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.255
+        0.262
       );
       emitter.rotation.z = a;
       this.rig.add(emitter);
 
-      this.visibleLeds.push({ body, emitter });
-    }
-  }
-
-  buildLEDGlows() {
-    this.ledGlows = [];
-
-    for (let i = 0; i < this.visibleLedCount; i++) {
       const glow = makeRadialSprite([
         [0.00, 'rgba(255,244,210,0.95)'],
         [0.10, 'rgba(255,214,140,0.48)'],
         [0.24, 'rgba(255,170,70,0.16)'],
         [1.00, 'rgba(255,255,255,0.0)']
-      ], 0.16, 0.05, 512);
-
-      const pos = this.visibleLeds[i].emitter.position;
-      glow.position.set(pos.x, pos.y, pos.z + 0.014);
+      ], 0.20, 0.04, 512);
+      glow.position.set(
+        Math.cos(a) * radius,
+        Math.sin(a) * radius,
+        0.278
+      );
       this.rig.add(glow);
-      this.ledGlows.push(glow);
+
+      this.visibleLeds.push({ body, emitter, glow });
     }
   }
 
   update(t, progress = 0) {
-    this.coreOuter.rotation.z += 0.00024;
-    this.coreMid.rotation.z -= 0.00009;
-    this.innerRail.rotation.z += 0.00028;
-    this.goldTrace.rotation.z -= 0.00044;
+    this.coreOuter.rotation.z += 0.00022;
+    this.coreMid.rotation.z -= 0.00008;
+    this.innerRail.rotation.z += 0.00020;
+    this.goldTrace.rotation.z -= 0.00034;
 
     this.rig.rotation.z = Math.sin(t * 0.08) * 0.0020;
     this.rig.rotation.x = Math.sin(t * 0.06) * 0.0028;
 
     for (let i = 0; i < this.strips.length; i++) {
-      this.strips[i].material.opacity = 0.30 + Math.sin(t * 0.8 + i) * 0.035;
+      this.strips[i].material.opacity = 0.18 + Math.sin(t * 0.8 + i) * 0.018;
     }
 
     const p = clamp(progress, 0, 1);
-
-    const front = p * this.ledCount;
+    const front = p * this.visibleLedCount;
     const litCount = Math.floor(front);
     const frac = front - litCount;
 
-    for (let i = 0; i < this.ledCount; i++) {
+    for (let i = 0; i < this.visibleLedCount; i++) {
       let level = 0;
       if (i < litCount) level = 1;
       else if (i === litCount) level = frac;
 
-      this.leds[i].housing.material.color.setRGB(
-        0.06 + level * 0.52,
-        0.05 + level * 0.30,
-        0.04 + level * 0.10
+      this.visibleLeds[i].body.material.color.setRGB(
+        0.08 + level * 0.46,
+        0.06 + level * 0.24,
+        0.04 + level * 0.08
       );
 
-      this.leds[i].emitter.material.opacity = 0.14 + level * 0.86;
-      this.leds[i].emitter.material.color.setRGB(
+      this.visibleLeds[i].emitter.material.opacity = 0.10 + level * 0.90;
+      this.visibleLeds[i].emitter.material.color.setRGB(
         1.0,
-        0.84 + level * 0.12,
-        0.42 + level * 0.08
+        0.86 + level * 0.10,
+        0.46 + level * 0.08
       );
-    }
 
-    if (this.visibleLeds) {
-      const front2 = p * this.visibleLedCount;
-      const litCount2 = Math.floor(front2);
-      const frac2 = front2 - litCount2;
-
-      for (let i = 0; i < this.visibleLedCount; i++) {
-        let level = 0;
-        if (i < litCount2) level = 1;
-        else if (i == litCount2) level = frac2;
-
-        this.visibleLeds[i].body.material.color.setRGB(
-          0.10 + level * 0.72,
-          0.08 + level * 0.42,
-          0.05 + level * 0.12
-        );
-
-        this.visibleLeds[i].emitter.material.opacity = 0.18 + level * 0.82;
-        this.visibleLeds[i].emitter.material.color.setRGB(
-          1.0,
-          0.90 + level * 0.08,
-          0.58 + level * 0.08
-        );
-
-        if (this.ledGlows) {
-          this.ledGlows[i].material.opacity = 0.03 + level * 0.34;
-          this.ledGlows[i].scale.set(
-            0.12 + level * 0.10,
-            0.12 + level * 0.10,
-            1
-          );
-        }
-      }
+      this.visibleLeds[i].glow.material.opacity = 0.02 + level * 0.22;
+      const s = 0.14 + level * 0.12;
+      this.visibleLeds[i].glow.scale.set(s, s, 1);
     }
   }
 }
@@ -633,20 +581,20 @@ class Flare {
     scene.add(this.group);
 
     this.center = makeRadialSprite([
-      [0.00, 'rgba(255,250,240,0.24)'],
-      [0.12, 'rgba(255,236,196,0.08)'],
-      [0.30, 'rgba(255,220,160,0.018)'],
+      [0.00, 'rgba(255,250,240,0.22)'],
+      [0.12, 'rgba(255,236,196,0.07)'],
+      [0.30, 'rgba(255,220,160,0.015)'],
       [1.00, 'rgba(255,255,255,0.0)']
-    ], 0.46, 0.032);
+    ], 0.42, 0.022);
     this.group.add(this.center);
 
-    this.horiz = makeHorizontalFlare(5.0, 0.052, 0.030);
+    this.horiz = makeHorizontalFlare(4.8, 0.050, 0.022);
     this.group.add(this.horiz);
   }
 
   update(t) {
-    this.center.material.opacity = 0.040 + Math.sin(t * 0.55) * 0.004;
-    this.horiz.material.opacity = 0.036 + Math.sin(t * 0.46 + 0.4) * 0.003;
+    this.center.material.opacity = 0.022 + Math.sin(t * 0.55) * 0.002;
+    this.horiz.material.opacity = 0.022 + Math.sin(t * 0.46 + 0.4) * 0.002;
   }
 }
 
@@ -706,8 +654,8 @@ class Logo {
     if (!this.root) return;
     const settle = easeOutQuart(Math.min(p / 0.62, 1));
     this.group.position.y = CFG.worldY + (1 - settle) * 0.12;
-    this.root.rotation.y += 0.0022;
-    this.root.rotation.x = 0.088 + Math.sin(t * 0.44) * 0.0055;
+    this.root.rotation.y += 0.0020;
+    this.root.rotation.x = 0.086 + Math.sin(t * 0.44) * 0.005;
   }
 }
 
