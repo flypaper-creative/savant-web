@@ -263,7 +263,7 @@ class Runtime {
 
     this.updateProgress();
     this.chamber.update(t);
-    this.ring.update(t);
+    this.ring.update(t, STATE.progress);
     this.logo.update(t, STATE.progress);
     this.flare.update(t);
 
@@ -374,7 +374,58 @@ class Chamber {
     }
   }
 
-  update(t) {
+  buildProgressLEDs() {
+    this.ledCount = 180;
+    this.leds = [];
+    this.ledPositions = [];
+
+    const housingGeo = new THREE.BoxGeometry(0.018, 0.008, 0.010);
+    const housingMat = new THREE.MeshPhysicalMaterial({
+      color: 0x090a0c,
+      metalness: 1.0,
+      roughness: 0.10,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.016,
+      envMapIntensity: 2.0
+    });
+
+    const emitterGeo = new THREE.BoxGeometry(0.012, 0.005, 0.008);
+
+    for (let i = 0; i < this.ledCount; i++) {
+      const a = Math.PI / 2 - (i / this.ledCount) * Math.PI * 2;
+      const radius = CFG.ringRadius - 0.245;
+
+      const housing = new THREE.Mesh(housingGeo, housingMat.clone());
+      housing.position.set(
+        Math.cos(a) * radius,
+        Math.sin(a) * radius,
+        0.145
+      );
+      housing.rotation.z = a;
+      this.rig.add(housing);
+
+      const emitter = new THREE.Mesh(
+        emitterGeo,
+        new THREE.MeshBasicMaterial({
+          color: 0xffd27a,
+          transparent: true,
+          opacity: 0.06
+        })
+      );
+      emitter.position.set(
+        Math.cos(a) * radius,
+        Math.sin(a) * radius,
+        0.158
+      );
+      emitter.rotation.z = a;
+      this.rig.add(emitter);
+
+      this.leds.push({ housing, emitter, angle: a });
+      this.ledPositions.push(emitter.position.clone());
+    }
+  }
+
+  update(t, progress = 0) {
     this.atmo.material.opacity = 0.038 + Math.sin(t * 0.20) * 0.004;
     this.fogA.position.x = -0.70 + Math.sin(t * 0.08) * 0.018;
     this.fogA.position.y = CFG.worldY + 0.12 + Math.cos(t * 0.07) * 0.012;
@@ -430,6 +481,7 @@ class MechaRing {
     this.buildDots();
     this.buildSideVanes();
     this.buildInnerMech();
+    this.buildProgressLEDs();
   }
 
   buildArmor() {
@@ -528,7 +580,7 @@ class MechaRing {
     }
   }
 
-  update(t) {
+  update(t, progress = 0) {
     this.coreOuter.rotation.z += 0.00024;
     this.coreMid.rotation.z -= 0.00009;
     this.innerRail.rotation.z += 0.00028;
@@ -540,6 +592,36 @@ class MechaRing {
 
     for (let i = 0; i < this.strips.length; i++) {
       this.strips[i].material.opacity = 0.30 + Math.sin(t * 0.8 + i) * 0.035;
+    }
+
+    const p = Math.max(0, Math.min(1, progress));
+    const front = p * this.ledCount;
+    const litCount = Math.floor(front);
+    const frac = front - litCount;
+
+    for (let i = 0; i < this.ledCount; i++) {
+      let level = 0;
+
+      if (i < litCount) {
+        level = 1;
+      } else if (i === litCount) {
+        level = frac;
+      }
+
+      const warm = 0.22 + level * 0.78;
+      const housingColor = new THREE.Color().setRGB(
+        0.05 + warm * 0.32,
+        0.04 + warm * 0.20,
+        0.03 + warm * 0.08
+      );
+      this.leds[i].housing.material.color.copy(housingColor);
+
+      this.leds[i].emitter.material.opacity = 0.04 + level * 0.92;
+      this.leds[i].emitter.material.color.setRGB(
+        1.0,
+        0.78 + level * 0.12,
+        0.36 + level * 0.10
+      );
     }
   }
 }
