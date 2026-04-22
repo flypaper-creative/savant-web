@@ -19,15 +19,15 @@ if (!els.canvas) throw new Error('Missing #bg3d');
 const CFG = {
   preloadMs: 10000,
   dpr: Math.min(window.devicePixelRatio || 1, 2),
-  exposure: 1.01,
-  bloomMin: 0.08,
-  bloomMax: 0.18,
-  worldY: 0.10,
-  worldZ: -2.55,
-  ringRadius: 2.36,
+  exposure: 1.0,
+  bloomMin: 0.07,
+  bloomMax: 0.16,
+  worldY: 0.08,
+  worldZ: -2.65,
+  ringRadius: 2.42,
   logoTargetSize: 1.88,
-  chamberRadius: 7.2,
-  chamberDepth: 12.0,
+  chamberRadius: 7.6,
+  chamberDepth: 12.5,
 };
 
 const STATE = {
@@ -74,7 +74,7 @@ function makeRadialSprite(stops, size, opacity, texSize = 1024) {
   return s;
 }
 
-function makeHorizontalFlare(width = 5.0, height = 0.05, opacity = 0.022) {
+function makeHorizontalFlare(width = 4.8, height = 0.05, opacity = 0.02) {
   const tex = makeCanvasTexture((g, w, h) => {
     const grad = g.createLinearGradient(0, h / 2, w, h / 2);
     grad.addColorStop(0.00, 'rgba(255,255,255,0.0)');
@@ -100,55 +100,31 @@ function makeHorizontalFlare(width = 5.0, height = 0.05, opacity = 0.022) {
   return s;
 }
 
-function makeVerticalScanSprite(width = 4.8, height = 0.10, opacity = 0.045) {
-  const tex = makeCanvasTexture((g, w, h) => {
-    const grad = g.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0.00, 'rgba(255,255,255,0.0)');
-    grad.addColorStop(0.50, 'rgba(255,240,210,0.95)');
-    grad.addColorStop(1.00, 'rgba(255,255,255,0.0)');
-    g.fillStyle = grad;
-    g.fillRect(0, 0, w, h);
-  }, 512);
-
-  const mat = new THREE.SpriteMaterial({
-    map: tex,
-    transparent: true,
-    opacity,
-    depthWrite: false,
-    depthTest: false,
-    blending: THREE.AdditiveBlending,
-  });
-
-  const s = new THREE.Sprite(mat);
-  s.scale.set(width, height, 1);
-  return s;
-}
-
 function glossyBlackMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x020203,
+    color: 0x010102,
     metalness: 1.0,
-    roughness: 0.05,
+    roughness: 0.045,
     clearcoat: 1.0,
     clearcoatRoughness: 0.008,
-    envMapIntensity: 3.0,
+    envMapIntensity: 3.4,
   });
 }
 
-function darkArmorMaterial() {
+function denseBlackMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x06070a,
+    color: 0x05060a,
     metalness: 1.0,
-    roughness: 0.09,
+    roughness: 0.11,
     clearcoat: 1.0,
-    clearcoatRoughness: 0.014,
+    clearcoatRoughness: 0.018,
     envMapIntensity: 2.4,
   });
 }
 
-function goldTraceMaterial(opacity = 0.22) {
+function goldTraceMaterial(opacity = 0.18) {
   return new THREE.MeshBasicMaterial({
-    color: 0xd4a24f,
+    color: 0xcf9d4f,
     transparent: true,
     opacity,
   });
@@ -195,31 +171,31 @@ class Runtime {
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
       CFG.bloomMin,
-      0.55,
+      0.52,
       0.96
     );
     this.composer.addPass(this.bloomPass);
 
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.03));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.028));
 
-    this.key = new THREE.SpotLight(0xffffff, 44, 64, 0.18, 0.88, 1.2);
+    this.key = new THREE.SpotLight(0xffffff, 42, 64, 0.18, 0.88, 1.2);
     this.key.position.set(0.0, 2.2, 5.8);
     this.scene.add(this.key);
 
-    this.fill = new THREE.PointLight(0xf7f9ff, 1.6, 12);
+    this.fill = new THREE.PointLight(0xf7f9ff, 1.45, 12);
     this.fill.position.set(-1.4, 0.0, 4.8);
     this.scene.add(this.fill);
 
-    this.rim = new THREE.PointLight(0xffffff, 10.2, 20);
-    this.rim.position.set(1.4, 1.6, -2.9);
+    this.rim = new THREE.PointLight(0xffffff, 10.4, 20);
+    this.rim.position.set(1.4, 1.65, -2.9);
     this.scene.add(this.rim);
 
-    this.goldKick = new THREE.PointLight(0xffe1a0, 1.1, 8);
+    this.goldKick = new THREE.PointLight(0xffe1a0, 1.0, 8);
     this.goldKick.position.set(0, -1.85, 2.4);
     this.scene.add(this.goldKick);
 
     this.chamber = new Chamber(this.scene);
-    this.ring = new MechaRing(this.scene);
+    this.ring = new AlienRing(this.scene);
     this.logo = new Logo(this.scene);
     this.flare = new Flare(this.scene);
 
@@ -241,7 +217,7 @@ class Runtime {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const aspect = w / h;
-    const frustum = w < 700 ? 8.8 : 8.1;
+    const frustum = w < 700 ? 8.9 : 8.2;
 
     this.camera.left = -frustum * aspect / 2;
     this.camera.right = frustum * aspect / 2;
@@ -253,7 +229,7 @@ class Runtime {
     this.composer.setSize(w, h);
 
     const mobileScale = Math.min(w / 420, h / 920);
-    let scale = Math.max(0.76, Math.min(1.0, mobileScale));
+    let scale = Math.max(0.75, Math.min(1.0, mobileScale));
     if (aspect < 0.62) scale *= 0.92;
 
     this.ring.group.scale.setScalar(scale);
@@ -309,75 +285,57 @@ class Chamber {
     this.room = new THREE.Mesh(
       new THREE.CylinderGeometry(CFG.chamberRadius, CFG.chamberRadius, CFG.chamberDepth, 96, 1, true),
       new THREE.MeshPhysicalMaterial({
-        color: 0x030303,
+        color: 0x020202,
         metalness: 0.14,
-        roughness: 0.98,
+        roughness: 0.985,
         side: THREE.BackSide,
       })
     );
     this.group.add(this.room);
 
     this.backPlate = new THREE.Mesh(
-      new THREE.CircleGeometry(5.4, 80),
+      new THREE.CircleGeometry(5.6, 88),
       new THREE.MeshPhysicalMaterial({
-        color: 0x050505,
-        metalness: 0.26,
-        roughness: 0.88,
+        color: 0x040405,
+        metalness: 0.28,
+        roughness: 0.86,
       })
     );
-    this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 2.35);
+    this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 2.45);
     this.group.add(this.backPlate);
 
-    this.backRings = [];
-    const ringDefs = [
-      { r: 3.26, tube: 0.040, opacity: 0.10, speed: 0.00014 },
-      { r: 3.54, tube: 0.028, opacity: 0.08, speed: -0.00010 },
-      { r: 3.82, tube: 0.020, opacity: 0.06, speed: 0.00008 },
-    ];
-    for (const d of ringDefs) {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(d.r, d.tube, 16, 180),
-        new THREE.MeshBasicMaterial({
-          color: 0xcda15a,
-          transparent: true,
-          opacity: d.opacity,
-        })
-      );
-      ring.position.set(0, CFG.worldY, CFG.worldZ - 2.20);
-      ring.userData.speed = d.speed;
-      scene.add(ring);
-      this.backRings.push(ring);
-    }
+    this.backHaloA = new THREE.Mesh(
+      new THREE.TorusGeometry(3.25, 0.06, 18, 180),
+      goldTraceMaterial(0.08)
+    );
+    this.backHaloA.position.set(0, CFG.worldY, CFG.worldZ - 2.30);
+    this.group.add(this.backHaloA);
 
-    this.scanLine = makeVerticalScanSprite(5.0, 0.085, 0.030);
-    this.scanLine.position.set(0, CFG.worldY + 1.55, CFG.worldZ + 0.18);
-    scene.add(this.scanLine);
+    this.backHaloB = new THREE.Mesh(
+      new THREE.TorusGeometry(3.62, 0.03, 18, 180),
+      goldTraceMaterial(0.05)
+    );
+    this.backHaloB.position.set(0, CFG.worldY, CFG.worldZ - 2.26);
+    this.group.add(this.backHaloB);
 
     this.atmo = makeRadialSprite([
-      [0.00, 'rgba(255,248,232,0.050)'],
-      [0.18, 'rgba(255,226,176,0.020)'],
-      [0.40, 'rgba(255,205,150,0.008)'],
+      [0.00, 'rgba(255,248,232,0.040)'],
+      [0.18, 'rgba(255,226,176,0.016)'],
+      [0.40, 'rgba(255,205,150,0.006)'],
       [1.00, 'rgba(255,255,255,0.0)']
-    ], 9.0, 0.048);
-    this.atmo.position.set(0, CFG.worldY, CFG.worldZ - 1.45);
+    ], 9.2, 0.040);
+    this.atmo.position.set(0, CFG.worldY, CFG.worldZ - 1.46);
     this.group.add(this.atmo);
   }
 
-  update(t, progress) {
-    this.atmo.material.opacity = 0.038 + Math.sin(t * 0.20) * 0.004;
-
-    for (const ring of this.backRings) {
-      ring.rotation.z += ring.userData.speed;
-    }
-
-    const scanStart = CFG.worldY + 1.58;
-    const scanEnd = CFG.worldY - 1.58;
-    this.scanLine.position.y = lerp(scanStart, scanEnd, progress);
-    this.scanLine.material.opacity = 0.024 + Math.sin(t * 0.8) * 0.003;
+  update(t) {
+    this.atmo.material.opacity = 0.032 + Math.sin(t * 0.20) * 0.003;
+    this.backHaloA.rotation.z += 0.00010;
+    this.backHaloB.rotation.z -= 0.00006;
   }
 }
 
-class MechaRing {
+class AlienRing {
   constructor(scene) {
     this.group = new THREE.Group();
     this.group.position.set(0, CFG.worldY, CFG.worldZ);
@@ -386,190 +344,202 @@ class MechaRing {
     this.rig = new THREE.Group();
     this.group.add(this.rig);
 
-    this.coreOuter = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius, 0.18, 36, 320),
+    this.outerHull = new THREE.Mesh(
+      new THREE.TorusGeometry(CFG.ringRadius, 0.24, 42, 320),
       glossyBlackMaterial()
     );
-    this.rig.add(this.coreOuter);
+    this.rig.add(this.outerHull);
 
-    this.coreMid = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius - 0.06, 0.080, 28, 300),
-      darkArmorMaterial()
+    this.innerHull = new THREE.Mesh(
+      new THREE.TorusGeometry(CFG.ringRadius - 0.08, 0.11, 32, 280),
+      denseBlackMaterial()
     );
-    this.rig.add(this.coreMid);
+    this.rig.add(this.innerHull);
 
-    this.innerRail = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius - 0.24, 0.020, 20, 260),
+    this.voidRail = new THREE.Mesh(
+      new THREE.TorusGeometry(CFG.ringRadius - 0.30, 0.028, 20, 240),
       glossyBlackMaterial()
     );
-    this.rig.add(this.innerRail);
+    this.rig.add(this.voidRail);
 
-    this.goldTrace = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius - 0.270, 0.008, 14, 240),
-      goldTraceMaterial(0.26)
+    this.fissureTrace = new THREE.Mesh(
+      new THREE.TorusGeometry(CFG.ringRadius - 0.335, 0.009, 14, 220),
+      goldTraceMaterial(0.14)
     );
-    this.rig.add(this.goldTrace);
+    this.rig.add(this.fissureTrace);
 
-    this.buildArmor();
-    this.buildPanels();
-    this.buildVisibleLEDs();
+    this.buildOuterCarapace();
+    this.buildInnerSpines();
+    this.buildAlienSockets();
+    this.buildEnergyNodes();
   }
 
-  buildArmor() {
-    const geo = new THREE.BoxGeometry(0.46, 0.20, 0.24);
-    const pattern = [1.90,1.12,1.44,1.08,1.76,1.10,1.38,1.08,1.64,1.10,1.30,1.08];
-    for (let i = 0; i < pattern.length; i++) {
-      const a = (i / pattern.length) * Math.PI * 2;
-      const seg = new THREE.Mesh(geo, glossyBlackMaterial());
-      seg.position.set(
-        Math.cos(a) * (CFG.ringRadius + 0.12),
-        Math.sin(a) * (CFG.ringRadius + 0.12),
-        0.12
-      );
-      seg.rotation.z = a;
-      seg.scale.y = pattern[i];
-      seg.scale.x = i % 3 === 0 ? 1.24 : 1.0;
-      this.rig.add(seg);
+  buildOuterCarapace() {
+    const segments = 10;
+    const geo = new THREE.BoxGeometry(0.62, 0.26, 0.34);
+    const patterns = [1.6, 1.14, 1.42, 1.08, 1.52, 1.12, 1.36, 1.08, 1.44, 1.10];
 
-      const cap = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22, 0.06, 0.02),
+    for (let i = 0; i < segments; i++) {
+      const a = (i / segments) * Math.PI * 2;
+      const shell = new THREE.Mesh(geo, glossyBlackMaterial());
+      shell.position.set(
+        Math.cos(a) * (CFG.ringRadius + 0.16),
+        Math.sin(a) * (CFG.ringRadius + 0.16),
+        0.18
+      );
+      shell.rotation.z = a;
+      shell.scale.y = patterns[i];
+      shell.scale.x = i % 2 === 0 ? 1.18 : 1.0;
+      this.rig.add(shell);
+
+      const slot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.028, 0.018),
         goldTraceMaterial(0.16)
       );
-      cap.position.z = 0.13;
-      seg.add(cap);
+      slot.position.z = 0.18;
+      shell.add(slot);
+
+      const tooth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.28, 0.08),
+        denseBlackMaterial()
+      );
+      tooth.position.set(0, 0.28, 0.03);
+      shell.add(tooth);
     }
   }
 
-  buildPanels() {
-    const geo = new THREE.BoxGeometry(0.26, 0.09, 0.14);
-    const angles = [0.22, 0.62, 1.18, 1.86, 2.42, 3.02, 3.48, 4.06, 4.76, 5.34, 5.92];
-    this.strips = [];
-    for (const a of angles) {
+  buildInnerSpines() {
+    this.spines = [];
+    const geo = new THREE.BoxGeometry(0.08, 0.84, 0.07);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const spine = new THREE.Mesh(geo, denseBlackMaterial());
+      spine.rotation.z = a;
+      spine.position.z = -0.04;
+      this.rig.add(spine);
+      this.spines.push(spine);
+    }
+  }
+
+  buildAlienSockets() {
+    this.socketGroups = [];
+    const count = 28;
+    for (let i = 0; i < count; i++) {
+      const a = Math.PI / 2 - (i / count) * Math.PI * 2;
       const g = new THREE.Group();
+      const radius = CFG.ringRadius - 0.19;
+
       g.position.set(
-        Math.cos(a) * (CFG.ringRadius + 0.03),
-        Math.sin(a) * (CFG.ringRadius + 0.03),
-        0.12
+        Math.cos(a) * radius,
+        Math.sin(a) * radius,
+        0.22
       );
       g.rotation.z = a;
 
-      const body = new THREE.Mesh(geo, darkArmorMaterial());
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.05, 0.04),
+        glossyBlackMaterial()
+      );
       g.add(body);
 
-      const slit = new THREE.Mesh(
-        new THREE.BoxGeometry(0.14, 0.012, 0.012),
-        goldTraceMaterial(0.22)
+      const recess = new THREE.Mesh(
+        new THREE.BoxGeometry(0.07, 0.018, 0.018),
+        new THREE.MeshBasicMaterial({
+          color: 0xffd489,
+          transparent: true,
+          opacity: 0.08,
+        })
       );
-      slit.position.z = 0.078;
-      g.add(slit);
+      recess.position.z = 0.024;
+      g.add(recess);
+
+      const halo = makeRadialSprite([
+        [0.00, 'rgba(255,244,210,0.95)'],
+        [0.10, 'rgba(255,214,140,0.42)'],
+        [0.24, 'rgba(255,170,70,0.12)'],
+        [1.00, 'rgba(255,255,255,0.0)']
+      ], 0.18, 0.02, 512);
+      halo.position.set(0, 0, 0.03);
+      g.add(halo);
 
       this.rig.add(g);
-      this.strips.push(slit);
+      this.socketGroups.push({ body, recess, halo });
     }
   }
 
-  buildVisibleLEDs() {
-    this.visibleLedCount = 56;
-    this.visibleLeds = [];
+  buildEnergyNodes() {
+    this.nodes = [];
+    const nodeAngles = [0.14, 1.18, 2.02, 3.26, 4.22, 5.30];
+    for (const a of nodeAngles) {
+      const g = new THREE.Group();
+      const radius = CFG.ringRadius + 0.02;
 
-    const housingGeo = new THREE.BoxGeometry(0.090, 0.030, 0.022);
-    const emitterGeo = new THREE.BoxGeometry(0.068, 0.020, 0.014);
-
-    for (let i = 0; i < this.visibleLedCount; i++) {
-      const a = Math.PI / 2 - (i / this.visibleLedCount) * Math.PI * 2;
-      const radius = CFG.ringRadius - 0.20;
-
-      const body = new THREE.Mesh(
-        housingGeo,
-        new THREE.MeshPhysicalMaterial({
-          color: 0x0a0b0d,
-          metalness: 1.0,
-          roughness: 0.08,
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.012,
-          envMapIntensity: 2.4,
-        })
-      );
-      body.position.set(
+      g.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.245
+        0.25
       );
-      body.rotation.z = a;
-      this.rig.add(body);
+      g.rotation.z = a;
 
-      const emitter = new THREE.Mesh(
-        emitterGeo,
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.11, 0.08),
+        glossyBlackMaterial()
+      );
+      g.add(body);
+
+      const core = new THREE.Mesh(
+        new THREE.BoxGeometry(0.09, 0.018, 0.016),
         new THREE.MeshBasicMaterial({
-          color: 0xffd88c,
+          color: 0xffd58f,
           transparent: true,
           opacity: 0.10,
         })
       );
-      emitter.position.set(
-        Math.cos(a) * radius,
-        Math.sin(a) * radius,
-        0.262
-      );
-      emitter.rotation.z = a;
-      this.rig.add(emitter);
+      core.position.z = 0.04;
+      g.add(core);
 
-      const glow = makeRadialSprite([
-        [0.00, 'rgba(255,244,210,0.95)'],
-        [0.10, 'rgba(255,214,140,0.48)'],
-        [0.24, 'rgba(255,170,70,0.16)'],
-        [1.00, 'rgba(255,255,255,0.0)']
-      ], 0.20, 0.04, 512);
-      glow.position.set(
-        Math.cos(a) * radius,
-        Math.sin(a) * radius,
-        0.278
-      );
-      this.rig.add(glow);
-
-      this.visibleLeds.push({ body, emitter, glow });
+      this.rig.add(g);
+      this.nodes.push(core);
     }
   }
 
   update(t, progress = 0) {
-    this.coreOuter.rotation.z += 0.00022;
-    this.coreMid.rotation.z -= 0.00008;
-    this.innerRail.rotation.z += 0.00020;
-    this.goldTrace.rotation.z -= 0.00034;
+    this.outerHull.rotation.z += 0.00012;
+    this.innerHull.rotation.z -= 0.00005;
+    this.voidRail.rotation.z += 0.00016;
+    this.fissureTrace.rotation.z -= 0.00024;
 
-    this.rig.rotation.z = Math.sin(t * 0.08) * 0.0020;
-    this.rig.rotation.x = Math.sin(t * 0.06) * 0.0028;
+    this.rig.rotation.z = Math.sin(t * 0.06) * 0.0014;
+    this.rig.rotation.x = Math.sin(t * 0.05) * 0.0020;
 
-    for (let i = 0; i < this.strips.length; i++) {
-      this.strips[i].material.opacity = 0.18 + Math.sin(t * 0.8 + i) * 0.018;
+    for (let i = 0; i < this.spines.length; i++) {
+      this.spines[i].position.z = -0.04 + Math.sin(t * 0.28 + i) * 0.01;
     }
 
     const p = clamp(progress, 0, 1);
-    const front = p * this.visibleLedCount;
+    const front = p * this.socketGroups.length;
     const litCount = Math.floor(front);
     const frac = front - litCount;
 
-    for (let i = 0; i < this.visibleLedCount; i++) {
+    for (let i = 0; i < this.socketGroups.length; i++) {
       let level = 0;
       if (i < litCount) level = 1;
       else if (i === litCount) level = frac;
 
-      this.visibleLeds[i].body.material.color.setRGB(
-        0.08 + level * 0.46,
-        0.06 + level * 0.24,
-        0.04 + level * 0.08
-      );
-
-      this.visibleLeds[i].emitter.material.opacity = 0.10 + level * 0.90;
-      this.visibleLeds[i].emitter.material.color.setRGB(
+      this.socketGroups[i].recess.material.opacity = 0.05 + level * 0.78;
+      this.socketGroups[i].recess.material.color.setRGB(
         1.0,
-        0.86 + level * 0.10,
-        0.46 + level * 0.08
+        0.84 + level * 0.10,
+        0.48 + level * 0.08
       );
 
-      this.visibleLeds[i].glow.material.opacity = 0.02 + level * 0.22;
-      const s = 0.14 + level * 0.12;
-      this.visibleLeds[i].glow.scale.set(s, s, 1);
+      this.socketGroups[i].halo.material.opacity = 0.01 + level * 0.16;
+      const s = 0.12 + level * 0.08;
+      this.socketGroups[i].halo.scale.set(s, s, 1);
+    }
+
+    for (let i = 0; i < this.nodes.length; i++) {
+      this.nodes[i].material.opacity = 0.06 + Math.sin(t * 0.8 + i) * 0.01 + p * 0.08;
     }
   }
 }
@@ -581,20 +551,20 @@ class Flare {
     scene.add(this.group);
 
     this.center = makeRadialSprite([
-      [0.00, 'rgba(255,250,240,0.22)'],
-      [0.12, 'rgba(255,236,196,0.07)'],
-      [0.30, 'rgba(255,220,160,0.015)'],
+      [0.00, 'rgba(255,250,240,0.20)'],
+      [0.12, 'rgba(255,236,196,0.06)'],
+      [0.30, 'rgba(255,220,160,0.012)'],
       [1.00, 'rgba(255,255,255,0.0)']
-    ], 0.42, 0.022);
+    ], 0.40, 0.020);
     this.group.add(this.center);
 
-    this.horiz = makeHorizontalFlare(4.8, 0.050, 0.022);
+    this.horiz = makeHorizontalFlare(4.8, 0.050, 0.020);
     this.group.add(this.horiz);
   }
 
   update(t) {
-    this.center.material.opacity = 0.022 + Math.sin(t * 0.55) * 0.002;
-    this.horiz.material.opacity = 0.022 + Math.sin(t * 0.46 + 0.4) * 0.002;
+    this.center.material.opacity = 0.020 + Math.sin(t * 0.55) * 0.002;
+    this.horiz.material.opacity = 0.020 + Math.sin(t * 0.46 + 0.4) * 0.002;
   }
 }
 
@@ -654,8 +624,8 @@ class Logo {
     if (!this.root) return;
     const settle = easeOutQuart(Math.min(p / 0.62, 1));
     this.group.position.y = CFG.worldY + (1 - settle) * 0.12;
-    this.root.rotation.y += 0.0020;
-    this.root.rotation.x = 0.086 + Math.sin(t * 0.44) * 0.005;
+    this.root.rotation.y += 0.0018;
+    this.root.rotation.x = 0.086 + Math.sin(t * 0.42) * 0.004;
   }
 }
 
