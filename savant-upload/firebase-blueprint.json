@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "BlogPost": {
+      "title": "Blog Post",
+      "description": "A blog post entry.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the blog post."
+        },
+        "content": {
+          "type": "string",
+          "description": "The main content of the blog post."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the author who created the post."
+        },
+        "createdAt": {
+          "type": "timestamp",
+          "description": "The timestamp when the post was created."
+        },
+        "updatedAt": {
+          "type": "timestamp",
+          "description": "The timestamp when the post was last updated."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "published"],
+          "description": "The publication status of the post."
+        }
+      },
+      "required": ["title", "content", "authorId", "createdAt", "updatedAt", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user profile.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user"],
+          "description": "The role of the user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the user."
+        }
+      },
+      "required": ["role", "email"]
+    }
+  },
+  "firestore": {
+    "/posts/{postId}": {
+      "schema": {
+        "$ref": "#/entities/BlogPost"
+      },
+      "description": "Stores all blog posts."
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores user profiles."
+    }
+  }
+}

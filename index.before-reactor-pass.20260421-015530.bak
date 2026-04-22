@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#050913" />
+  <title>Savant — Ghost Architecture</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/node_modules/three/build/three.module.js",
+      "three/addons/": "/node_modules/three/examples/jsm/",
+      "gsap": "/node_modules/gsap/index.js"
+    }
+  }
+  </script>
+
+  <style>
+    :root{
+      --bg:#040913;
+      --bg-2:#07111c;
+      --bg-3:#0a1626;
+      --panel:rgba(8,16,30,.46);
+      --panel-2:rgba(8,16,30,.66);
+      --line:rgba(149,207,255,.12);
+      --line-2:rgba(149,207,255,.22);
+      --text:#eef6ff;
+      --muted:rgba(221,233,248,.74);
+      --dim:rgba(170,190,219,.44);
+      --blue:#8bd5ff;
+      --blue-2:#5fb8ff;
+      --violet:#8f7cff;
+      --radius:28px;
+      --shell:18px;
+      --header-h:84px;
+      --blur:18px;
+      --ease:cubic-bezier(.22,1,.36,1);
+      --max:1380px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      min-height:100%;
+      overflow-x:hidden;
+      font-family:Inter,system-ui,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 50% 10%, rgba(93,152,255,.08), transparent 20%),
+        radial-gradient(circle at 82% 16%, rgba(110,87,255,.06), transparent 24%),
+        linear-gradient(180deg, #07111b 0%, #040913 40%, #02050b 100%);
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:1;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(124,170,255,.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,170,255,.010) 1px, transparent 1px);
+      background-size:84px 84px;
+      mask:radial-gradient(circle at 50% 40%, rgba(0,0,0,.95), transparent 88%);
+      opacity:.44;
+    }
+
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:2;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 50% 46%, transparent 22%, rgba(0,0,0,.16) 55%, rgba(0,0,0,.62) 100%);
+    }
+
+    #bg3d{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      display:block;
+      z-index:0;
+    }
+
+    .fx-noise,.fx-vignette,.fx-flash,.fx-shock{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .fx-noise{
+      z-index:3;
+      opacity:.018;
+      mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:256px 256px;
+      animation:noiseShift .22s steps(3) infinite;
+    }
+
+    .fx-vignette{
+      z-index:4;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.20), transparent 16%, transparent 82%, rgba(0,0,0,.34)),
+        radial-gradient(circle at 50% 100%, rgba(97,151,255,.04), transparent 42%);
+    }
+
+    .fx-flash{
+      z-index:90;
+      opacity:0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(220,240,255,.20), rgba(120,190,255,.08) 24%, transparent 54%);
+      transition:opacity .5s var(--ease);
+    }
+    .fx-flash.live{opacity:1}
+
+    .fx-shock{
+      z-index:89;
+      opacity:0;
+      background:
+        radial-gradient(circle at 50% 50%, transparent 0 11%, rgba(160,220,255,.16) 12%, rgba(110,185,255,.10) 18%, transparent 26%);
+      transform:scale(.6);
+      transition:opacity .6s var(--ease), transform .85s var(--ease);
+    }
+    .fx-shock.live{
+      opacity:1;
+      transform:scale(2.2);
+    }
+
+    .preloader{
+      position:fixed;
+      inset:0;
+      z-index:80;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:opacity 1s var(--ease), visibility 1s var(--ease);
+    }
+
+    .preloader.hidden{
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+    }
+
+    .preloader-core{
+      position:relative;
+      width:min(84vw, 580px);
+      aspect-ratio:1/1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+    }
+
+    .preloader-meta{
+      position:absolute;
+      bottom:-38px;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+      min-width:240px;
+    }
+
+    .preloader-percent{
+      font-family:Orbitron,sans-serif;
+      font-size:16px;
+      letter-spacing:.26em;
+      text-transform:uppercase;
+      color:#eaf5ff;
+    }
+
+    .preloader-label{
+      font-size:10px;
+      letter-spacing:.20em;
+      text-transform:uppercase;
+      color:rgba(220,236,255,.46);
+      text-align:center;
+    }
+
+    .init-btn{
+      position:absolute;
+      bottom:-102px;
+      left:50%;
+      transform:translateX(-50%);
+      min-width:228px;
+      border:none;
+      border-radius:999px;
+      padding:1rem 1.3rem;
+      background:linear-gradient(180deg, rgba(9,22,42,.92), rgba(4,11,22,.96));
+      color:#edf8ff;
+      font-family:Orbitron,sans-serif;
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      border:1px solid rgba(145,211,255,.16);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.02),
+        0 0 22px rgba(95,181,255,.06);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .7s var(--ease), transform .7s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+    }
+
+    .init-btn.ready{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .init-btn:hover{
+      border-color:rgba(145,211,255,.30);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.03),
+        0 0 30px rgba(95,181,255,.12);
+    }
+
+    .shell{
+      position:relative;
+      z-index:10;
+      opacity:0;
+      transition:opacity 1s var(--ease);
+    }
+    .shell.live{opacity:1}
+
+    .topbar{
+      position:fixed;
+      top:var(--shell);
+      left:var(--shell);
+      right:var(--shell);
+      height:var(--header-h);
+      z-index:60;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      padding:16px 18px;
+      border-radius:30px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(6,15,29,.74), rgba(5,11,21,.44));
+      backdrop-filter:blur(var(--blur));
+      box-shadow:0 16px 60px rgba(0,0,0,.24);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      min-width:0;
+      flex:0 1 auto;
+    }
+
+    .brand-mark{
+      width:50px;
+      height:50px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(167,226,255,.08), transparent 44%),
+        linear-gradient(180deg, rgba(12,22,40,.54), rgba(8,12,18,.68));
+      border:1px solid rgba(143,207,255,.08);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 0 18px rgba(111,194,255,.04);
+      overflow:hidden;
+    }
+
+    .brand-copy{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .brand-copy h1{
+      font-family:Orbitron,sans-serif;
+      font-size:14px;
+      letter-spacing:.22em;
+      text-transform:lowercase;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .brand-copy p{
+      font-size:10px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--dim);
+      white-space:nowrap;
+    }
+
+    .desktop-nav{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .nav-link,.menu-btn,.cta-btn,.subtle-btn{
+      text-decoration:none;
+      border:none;
+      cursor:pointer;
+      color:inherit;
+      appearance:none;
+    }
+
+    .nav-link,.menu-btn,.subtle-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:11px 15px;
+      border-radius:999px;
+      border:1px solid rgba(144,208,255,.12);
+      background:rgba(255,255,255,.02);
+      color:rgba(230,241,255,.84);
+      font-family:Orbitron,sans-serif;
+      font-size:10px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      transition:transform .28s var(--ease), border-color .28s var(--ease), background .28s var(--ease), box-shadow .28s var(--ease);
+    }
+
+    .menu-btn{
+      display:none;
+      width:48px;
+      height:48px;
+      border-radius:16px;
+      font-size:20px;
+      letter-spacing:0;
+      padding:0;
+    }
+
+    .mobile-menu{
+      position:fixed;
+      inset:0;
+      z-index:70;
+      background:rgba(2,7,16,.74);
+      backdrop-filter:blur(14px);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .34s var(--ease);
+    }
+    .mobile-menu.open{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .mobile-panel{
+      position:absolute;
+      top:14px;
+      right:14px;
+      bottom:14px;
+      width:min(420px, calc(100vw - 28px));
+      border-radius:28px;
+      border:1px solid rgba(147,206,255,.14);
+      background:linear-gradient(180deg, rgba(6,14,27,.94), rgba(3,8,17,.98));
+      padding:20px;
+      transform:translateX(26px);
+      transition:transform .42s var(--ease);
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .mobile-menu.open .mobile-panel{transform:translateX(0)}
+
+    .mobile-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .mobile-title{
+      font-family:Orbitron,sans-serif;
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#d7f0ff;
+    }
+
+    .mobile-links{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      flex:1 1 auto;
+    }
+
+    .mobile-links a{
+      text-decoration:none;
+      padding:16px 18px;
+      border-radius:20px;
+      border:1px solid rgba(145,206,255,.10);
+      background:rgba(255,255,255,.02);
+      color:#eef6ff;
+      font-family:Orbitron,sans-serif;
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    main{
+      position:relative;
+      z-index:12;
+      display:flex;
+      flex-direction:column;
+    }
+
+    section{
+      min-height:100svh;
+      padding:calc(var(--header-h) + 64px) var(--shell) 88px;
+      display:flex;
+      align-items:center;
+    }
+
+    .container{
+      width:min(var(--max), 100%);
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:28px;
+    }
+
+    .hero{
+      min-height:112svh;
+      align-items:flex-end;
+      padding-bottom:10svh;
+    }
+
+    .hero-grid{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:28px;
+      flex-wrap:wrap;
+    }
+
+    .hero-copy{
+      flex:1 1 640px;
+      display:flex;
+      flex-direction:column;
+      gap:0;
+    }
+
+    .hero-side{
+      flex:1 1 340px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      min-width:300px;
+    }
+
+    .eyebrow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+      font-family:Orbitron,sans-serif;
+      font-size:10px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:rgba(193,227,255,.74);
+      flex-wrap:wrap;
+    }
+
+    .eyebrow::before{
+      content:"";
+      width:58px;
+      height:1px;
+      background:linear-gradient(90deg, var(--blue), transparent);
+      flex:0 0 auto;
+    }
+
+    .hero-copy h2{
+      font-size:clamp(48px, 7vw, 116px);
+      line-height:.88;
+      letter-spacing:-.06em;
+      font-weight:900;
+      max-width:10ch;
+      margin-bottom:18px;
+      text-wrap:balance;
+    }
+
+    .hero-copy h2 .accent{
+      color:#def5ff;
+      text-shadow:0 0 16px rgba(125,216,255,.14);
+    }
+
+    .hero-copy p{
+      max-width:62ch;
+      font-size:15px;
+      line-height:1.9;
+      color:var(--muted);
+      margin-bottom:24px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:30px;
+    }
+
+    .cta-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width:176px;
+      padding:1rem 1.35rem;
+      border-radius:999px;
+      background:linear-gradient(180deg, rgba(83,164,255,.18), rgba(14,35,62,.38));
+      border:1px solid rgba(139,207,255,.18);
+      color:#eff8ff;
+      font-family:Orbitron,sans-serif;
+      font-size:10px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      box-shadow:0 0 24px rgba(86,177,255,.06);
+    }
+
+    .hero-stats,.chapter-rail,.feature-grid,.metric-grid,.manifesto,.systems-grid{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .hero-stats > *,
+    .chapter-rail > *,
+    .feature-grid > *,
+    .metric-grid > *,
+    .manifesto > *,
+    .systems-grid > *{
+      flex:1 1 260px;
+    }
+
+    .glass,.stat,.chapter-card,.feature-card,.metric-card,.system-card,.manifesto-item,.contact-panel{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(10,18,34,.50), rgba(5,10,18,.34));
+      backdrop-filter:blur(var(--blur));
+      box-shadow:0 14px 44px rgba(0,0,0,.18);
+      border-radius:24px;
+      padding:18px;
+    }
+
+    .panel-head,.k,.n,.meta,.a{
+      font-family:Orbitron,sans-serif;
+      font-size:10px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--dim);
+      margin-bottom:12px;
+    }
+
+    .v{
+      font-size:28px;
+      line-height:1;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .s,.signal .b,.manifesto-item p,.chapter-card p,.feature-card p,.system-card p,.contact-panel p{
+      line-height:1.8;
+      color:var(--muted);
+    }
+
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .stack-row{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding-bottom:10px;
+      border-bottom:1px solid rgba(147,206,255,.08);
+    }
+
+    .label{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-family:Orbitron,sans-serif;
+      font-size:10px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color:var(--dim);
+      flex-wrap:wrap;
+    }
+
+    .bar{
+      height:3px;
+      border-radius:999px;
+      overflow:hidden;
+      background:rgba(255,255,255,.06);
+    }
+    .bar > i{
+      display:block;
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, #dff5ff, var(--blue), var(--violet));
+      box-shadow:0 0 16px rgba(107,197,255,.26);
+    }
+
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:30px;
+      flex-wrap:wrap;
+    }
+
+    .section-head h3,
+    .contact-panel h4{
+      font-size:clamp(34px, 5vw, 72px);
+      line-height:.94;
+      letter-spacing:-.05em;
+      font-weight:900;
+      max-width:12ch;
+    }
+
+    .section-head p{
+      flex:1 1 320px;
+      color:var(--muted);
+      line-height:1.85;
+      max-width:52ch;
+      margin-left:auto;
+    }
+
+    .chapter-card h3,.feature-card h4,.system-card h4,.manifesto-item h5{
+      font-weight:900;
+      letter-spacing:-.04em;
+    }
+
+    .chapter-card h3{font-size:28px;line-height:.95;max-width:8ch}
+    .feature-card h4{font-size:25px;line-height:1}
+    .system-card h4{font-size:30px;line-height:.95;max-width:11ch}
+    .manifesto-item h5{font-size:24px;line-height:1}
+
+    .feature-card{min-height:420px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
+    .visual{
+      position:relative;
+      height:220px;
+      border-radius:20px;
+      border:1px solid rgba(151,208,255,.08);
+      background:
+        radial-gradient(circle at 50% 42%, rgba(125,210,255,.18), transparent 14%),
+        radial-gradient(circle at 68% 54%, rgba(83,151,255,.12), transparent 20%),
+        linear-gradient(180deg, rgba(10,21,39,.88), rgba(5,12,24,.96));
+      overflow:hidden;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(151,208,255,.10);
+      background:rgba(255,255,255,.02);
+      font-family:Orbitron,sans-serif;
+      font-size:10px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#dff5ff;
+      margin-bottom:18px;
+    }
+
+    .signal-list{display:flex;flex-direction:column;gap:12px}
+    .signal{
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(147,207,255,.08);
+      background:rgba(255,255,255,.02);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .contact-panel{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:26px;
+      flex-wrap:wrap;
+      border-radius:32px;
+      padding:26px;
+    }
+
+    .contact-meta{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:flex-end;
+    }
+
+    .reveal{
+      opacity:0;
+      transform:translateY(28px);
+      transition:opacity .9s var(--ease), transform .9s var(--ease);
+    }
+    .reveal.in{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    @keyframes noiseShift{
+      0%{transform:translate(0,0)}
+      33%{transform:translate(1px,-1px)}
+      66%{transform:translate(-1px,1px)}
+      100%{transform:translate(0,0)}
+    }
+
+    @media (max-width:1080px){
+      .desktop-nav .nav-link{display:none}
+      .menu-btn{display:flex}
+    }
+
+    @media (max-width:920px){
+      :root{--shell:14px;--header-h:74px}
+      .topbar{border-radius:24px}
+      .hero{min-height:100svh;padding-bottom:8svh}
+      .contact-meta{align-items:flex-start}
+    }
+
+    @media (max-width:640px){
+      .brand-copy p{display:none}
+      .preloader-core{width:min(88vw, 430px)}
+      .init-btn{min-width:190px}
+      .hero-copy h2{font-size:clamp(40px, 13vw, 68px)}
+      .section-head{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg3d"></canvas>
+  <div class="fx-noise"></div>
+  <div class="fx-vignette"></div>
+  <div class="fx-flash" id="fxFlash"></div>
+  <div class="fx-shock" id="fxShock"></div>
+
+  <div class="preloader" id="preloader">
+    <div class="preloader-core">
+      <div class="preloader-meta">
+        <div class="preloader-percent" id="preloadPercent">000%</div>
+        <div class="preloader-label">savant // ghost architecture // chamber ignition</div>
+      </div>
+      <button class="init-btn" id="initBtn">initialize</button>
+    </div>
+  </div>
+
+  <div class="shell" id="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" data-logo-anchor="true" aria-hidden="true"></div>
+        <div class="brand-copy">
+          <h1>savant</h1>
+          <p>private systems for authored intelligence</p>
+        </div>
+      </div>
+
+      <nav class="desktop-nav">
+        <a class="nav-link" href="#chapters">chapters</a>
+        <a class="nav-link" href="#featured">featured</a>
+        <a class="nav-link" href="#systems">systems</a>
+        <a class="nav-link" href="#manifesto">manifesto</a>
+        <a class="nav-link" href="#contact">contact</a>
+        <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+      </nav>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-panel">
+        <div class="mobile-head">
+          <div class="mobile-title">navigation</div>
+          <button class="subtle-btn" id="closeMenuBtn">close</button>
+        </div>
+        <div class="mobile-links">
+          <a href="#chapters">chapters</a>
+          <a href="#featured">featured</a>
+          <a href="#systems">systems</a>
+          <a href="#manifesto">manifesto</a>
+          <a href="#contact">contact</a>
+        </div>
+        <div class="mobile-title">logo source // public/assets/logo7/logo7.glb</div>
+      </div>
+    </div>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-copy reveal">
+              <div class="eyebrow">savant runtime // chamber-led interaction // award-grade rebuild</div>
+              <h2>build a branded world with a <span class="accent">ceremonial nervous system.</span></h2>
+              <p>
+                Savant is no longer a decorative shell. It behaves like a private chamber for authored intelligence: severe, atmospheric, interactive, and deliberately staged so every reveal feels consequential.
+              </p>
+
+              <div class="hero-actions">
+                <a class="cta-btn" href="#featured">enter structure</a>
+                <a class="subtle-btn" href="#manifesto">read doctrine</a>
+              </div>
+
+              <div class="hero-stats">
+                <article class="stat">
+                  <div class="k">brand pressure</div>
+                  <div class="v">high</div>
+                  <div class="s">The logo, copy, field, and navigation now speak the same visual language instead of acting like strangers.</div>
+                </article>
+                <article class="stat">
+                  <div class="k">scene quality</div>
+                  <div class="v">staged</div>
+                  <div class="s">The 3D chamber is built to support the page rather than swallow it whole.</div>
+                </article>
+                <article class="stat">
+                  <div class="k">launch posture</div>
+                  <div class="v">ceremonial</div>
+                  <div class="s">Initialize now feels like a transition into a system, not a button that merely removes a loader.</div>
+                </article>
+              </div>
+            </div>
+
+            <aside class="hero-side reveal">
+              <div class="glass">
+                <div class="panel-head">signal ledger</div>
+                <div class="stack">
+                  <div class="stack-row">
+                    <div class="label"><span>ghost architecture</span><span>live</span></div>
+                    <div class="bar"><i style="width:92%"></i></div>
+                  </div>
+                  <div class="stack-row">
+                    <div class="label"><span>logo choreography</span><span>corrected</span></div>
+                    <div class="bar"><i style="width:96%"></i></div>
+                  </div>
+                  <div class="stack-row">
+                    <div class="label"><span>brand saturation</span><span>heavy</span></div>
+                    <div class="bar"><i style="width:88%"></i></div>
+                  </div>
+                  <div class="stack-row">
+                    <div class="label"><span>surface discipline</span><span>elevated</span></div>
+                    <div class="bar"><i style="width:90%"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass">
+                <div class="panel-head">savant doctrine</div>
+                <p style="line-height:1.9;color:var(--muted)">
+                  The center of the page belongs to atmosphere and meaning, not to a giant trophy-object. The mark enters ceremonially, then yields space to the world it has opened.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="chapters">
+        <div class="container">
+          <div class="section-head reveal">
+            <h3>four laws now govern the surface.</h3>
+            <p>
+              This rebuild makes Savant feel less like a collection of effects and more like a complete visual constitution: chamber logic, object rhetoric, selective revelation, and pressure-led typography.
+            </p>
+          </div>
+
+          <div class="chapter-rail">
+            <article class="chapter-card reveal">
+              <div class="n">law 01</div>
+              <h3>the mark yields the room</h3>
+              <p>The logo owns the opening, then moves into the top-left lockup so the world can breathe.</p>
+            </article>
+
+            <article class="chapter-card reveal">
+              <div class="n">law 02</div>
+              <h3>space must imply structure</h3>
+              <p>Hidden ribs, arches, seams, dust, and negative space make the field read like architecture, not wallpaper.</p>
+            </article>
+
+            <article class="chapter-card reveal">
+              <div class="n">law 03</div>
+              <h3>systems behave like artifacts</h3>
+              <p>Sections are staged as rooms, documents, instruments, and protocols rather than generic web blocks.</p>
+            </article>
+
+            <article class="chapter-card reveal">
+              <div class="n">law 04</div>
+              <h3>revelation is controlled</h3>
+              <p>Not everything arrives at once. Information appears in authored layers and keeps its dignity.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="featured">
+        <div class="container">
+          <div class="section-head reveal">
+            <h3>the page now sells atmosphere, rigor, and capability together.</h3>
+            <p>
+              Every section is tuned to feel more premium, more deliberate, and more useful. The site is finally cohesive enough to carry a larger Savant ecosystem.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card reveal">
+              <div>
+                <div class="chip">field system</div>
+                <div class="visual"></div>
+              </div>
+              <div>
+                <h4>ghost chamber</h4>
+                <p>The background is a living architectural volume with ribs, arches, dust, shards, and controlled parallax depth.</p>
+              </div>
+            </article>
+
+            <article class="feature-card reveal">
+              <div>
+                <div class="chip">brand system</div>
+                <div class="visual" style="background:
+                  radial-gradient(circle at 50% 42%, rgba(162,224,255,.18), transparent 14%),
+                  radial-gradient(circle at 68% 54%, rgba(111,174,255,.12), transparent 20%),
+                  linear-gradient(180deg, rgba(10,21,39,.92), rgba(5,12,24,.98));"></div>
+              </div>
+              <div>
+                <h4>saturated identity</h4>
+                <p>Savant branding is now distributed through the lockup, copy, metrics, chamber language, and the initialize ritual itself.</p>
+              </div>
+            </article>
+
+            <article class="feature-card reveal">
+              <div>
+                <div class="chip">interaction system</div>
+                <div class="visual" style="background:
+                  radial-gradient(circle at 50% 42%, rgba(223,246,255,.12), transparent 14%),
+                  radial-gradient(circle at 68% 54%, rgba(136,116,255,.10), transparent 20%),
+                  linear-gradient(180deg, rgba(10,21,39,.92), rgba(5,12,24,.98));"></div>
+              </div>
+              <div>
+                <h4>ceremonial launch</h4>
+                <p>Initialize now triggers sound, flash, shock, camera movement, and object flight so the transition actually matters.</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric-card reveal">
+              <div class="k">layout integrity</div>
+              <div class="v">flex-first</div>
+              <div class="s">The structure now responds more gracefully across viewport sizes instead of relying on brittle composition tricks.</div>
+            </article>
+            <article class="metric-card reveal">
+              <div class="k">camera realism</div>
+              <div class="v">world-space</div>
+              <div class="s">The logo gets smaller because it actually travels farther away in depth, not because of fake scalar cheats.</div>
+            </article>
+            <article class="metric-card reveal">
+              <div class="k">initialize ritual</div>
+              <div class="v">audible</div>
+              <div class="s">A synthesized Web Audio event makes the launch feel expensive without depending on external sound files.</div>
+            </article>
+            <article class="metric-card reveal">
+              <div class="k">browser posture</div>
+              <div class="v">safer</div>
+              <div class="s">The site stays functional without exotic dependencies or fragile integrations piled on top of broken assumptions.</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="systems">
+        <div class="container">
+          <div class="systems-grid">
+            <article class="system-card reveal">
+              <div class="panel-head">for brands</div>
+              <h4>build a world that can carry meaning without begging for attention.</h4>
+              <p>
+                Savant is strongest when it behaves like a controlled environment with its own laws: pacing, pressure, hierarchy, and atmospheric credibility.
+              </p>
+              <div class="signal-list">
+                <div class="signal">
+                  <div class="a">rule</div>
+                  <div class="b">The center of the site is reserved for atmosphere and text, not for a permanent object prison.</div>
+                </div>
+                <div class="signal">
+                  <div class="a">rule</div>
+                  <div class="b">Every section should behave like a room, document, instrument, or protocol rather than a generic content slab.</div>
+                </div>
+                <div class="signal">
+                  <div class="a">rule</div>
+                  <div class="b">Premium design is compositional discipline plus pressure-led revelation, not merely a cleaner gradient.</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="system-card reveal">
+              <div class="panel-head">for agencies</div>
+              <h4>slot in with posture. leave with consequence.</h4>
+              <p>
+                The service framing is now clearer and more premium: worldbuilding, interaction design, launch environments, interface chambers, and authored front-end systems.
+              </p>
+              <div class="signal-list">
+                <div class="signal">
+                  <div class="a">execution</div>
+                  <div class="b">Interaction systems, launch sites, and premium front-end staging that do not embarrass the underlying work.</div>
+                </div>
+                <div class="signal">
+                  <div class="a">branding</div>
+                  <div class="b">A surface language where copy, motion, material, and hierarchy all belong to the same system.</div>
+                </div>
+                <div class="signal">
+                  <div class="a">runtime</div>
+                  <div class="b">A stronger base for rooms, shards, narrative states, dossiers, and future Savant chambers.</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="manifesto">
+        <div class="container">
+          <div class="section-head reveal">
+            <h3>stop collecting effects. design the laws the effects belong to.</h3>
+            <p>
+              This version is stronger because it picks a worldview and obeys it. The chamber, the mark, the copy, the launch ritual, and the layout now finally feel like parts of one idea.
+            </p>
+          </div>
+
+          <div class="manifesto">
+            <article class="manifesto-item reveal">
+              <div class="n">01 // chamber logic</div>
+              <h5>space is narrative</h5>
+              <p>The scene should imply hidden spans, ribs, vaults, and memory pressure even when nothing obvious is happening.</p>
+            </article>
+
+            <article class="manifesto-item reveal">
+              <div class="n">02 // correct choreography</div>
+              <h5>distance creates scale</h5>
+              <p>The logo’s change in size is driven by its travel through real perspective depth, not by arbitrary shrinking.</p>
+            </article>
+
+            <article class="manifesto-item reveal">
+              <div class="n">03 // launch consequence</div>
+              <h5>initialize must matter</h5>
+              <p>A click that changes the whole state of the site should look, sound, and feel consequential.</p>
+            </article>
+
+            <article class="manifesto-item reveal">
+              <div class="n">04 // saturated identity</div>
+              <h5>savant everywhere</h5>
+              <p>The brand should not live in only one logo. It should permeate copy, proportions, sequences, metrics, and spatial law.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact">
+        <div class="container">
+          <div class="contact-panel reveal">
+            <div>
+              <div class="eyebrow">next move // escalation</div>
+              <h4>turn this into a full narrative runtime, not just a homepage.</h4>
+              <p>
+                The hard part is no longer whether Savant can look expensive. The hard part is whether every future page can obey the same spatial and narrative logic. This rebuild finally gives you a base that can.
+              </p>
+            </div>
+
+            <div class="contact-meta">
+              <a class="cta-btn" href="#chapters">enter chapters</a>
+              <div class="meta">savant // ghost architecture rebuild</div>
+              <div class="meta">logo source // public/assets/logo7/logo7.glb</div>
+              <div class="meta">runtime // localhost:3000</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./logo7-reactor.js?v=reactor-upgrade-01"></script>
+</body>
+</html>

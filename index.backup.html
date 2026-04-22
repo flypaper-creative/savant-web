@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>savant // blade runner weapon grade</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --obs-0:#020202;
+    --obs-1:#0a0a0b;
+    --obs-2:#151517;
+    --obs-3:#232327;
+    --gold-0:#fff3b0;
+    --gold-1:#ffd86b;
+    --gold-2:#ffbf2f;
+    --gold-3:#ff9d00;
+    --shadow:rgba(0,0,0,.22);
+  }
+
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:var(--bg);
+    font-family:Inter,Arial,Helvetica,sans-serif;
+  }
+
+  .wrap{
+    width:100%;
+    height:100%;
+    display:grid;
+    place-items:center;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(0,0,0,.02), transparent 16%),
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,.03), transparent 34%),
+      linear-gradient(180deg,#ffffff 0%,#fbfbfc 100%);
+  }
+
+  .stage{
+    display:grid;
+    place-items:center;
+    gap:2.2rem;
+    transform:translateY(-2vh);
+  }
+
+  svg{
+    width:min(76vw,680px);
+    height:auto;
+    overflow:visible;
+    display:block;
+  }
+
+  .wordmark{
+    font-size:clamp(18px,2.8vw,34px);
+    letter-spacing:.42em;
+    text-transform:lowercase;
+    color:#0a0a0d;
+    padding-left:.42em;
+    font-weight:300;
+  }
+
+  .float{
+    animation:float 5.8s ease-in-out infinite;
+    transform-origin:50% 50%;
+  }
+
+  .shineSweep{
+    animation:shineSweep 4.8s ease-in-out infinite;
+  }
+
+  .energyPulse{
+    animation:energyPulse 2.3s ease-in-out infinite;
+  }
+
+  .goldTravel{
+    animation:goldTravel 3.2s linear infinite;
+  }
+
+  @keyframes float{
+    0%,100%{transform:translateY(0px)}
+    50%{transform:translateY(-10px)}
+  }
+
+  @keyframes shineSweep{
+    0%{opacity:.15; transform:translateX(-18px)}
+    50%{opacity:.95; transform:translateX(18px)}
+    100%{opacity:.15; transform:translateX(-18px)}
+  }
+
+  @keyframes energyPulse{
+    0%,100%{opacity:.55}
+    50%{opacity:1}
+  }
+
+  @keyframes goldTravel{
+    from{stroke-dashoffset:220}
+    to{stroke-dashoffset:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <svg viewBox="0 0 900 760" aria-label="savant logo">
+      <defs>
+        <!-- obsidian body -->
+        <linearGradient id="obsidianMain" x1="12%" y1="10%" x2="88%" y2="90%">
+          <stop offset="0%" stop-color="#2a2a30"/>
+          <stop offset="10%" stop-color="#111215"/>
+          <stop offset="26%" stop-color="#050506"/>
+          <stop offset="48%" stop-color="#1a1b1f"/>
+          <stop offset="66%" stop-color="#070708"/>
+          <stop offset="84%" stop-color="#1f2025"/>
+          <stop offset="100%" stop-color="#040404"/>
+        </linearGradient>
+
+        <linearGradient id="obsidianBevel" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#5e616c"/>
+          <stop offset="14%" stop-color="#22242a"/>
+          <stop offset="36%" stop-color="#090909"/>
+          <stop offset="58%" stop-color="#2a2d36"/>
+          <stop offset="100%" stop-color="#0a0a0b"/>
+        </linearGradient>
+
+        <linearGradient id="obsidianSpec" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+          <stop offset="26%" stop-color="#e9edf7"/>
+          <stop offset="50%" stop-color="#ffffff"/>
+          <stop offset="72%" stop-color="#cfd7e7"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </linearGradient>
+
+        <!-- savant gold -->
+        <linearGradient id="savantGold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fff8cf"/>
+          <stop offset="15%" stop-color="#ffe891"/>
+          <stop offset="42%" stop-color="#ffc93a"/>
+          <stop offset="70%" stop-color="#ffb200"/>
+          <stop offset="100%" stop-color="#ff8c00"/>
+        </linearGradient>
+
+        <linearGradient id="savantGoldHot" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#fff9db"/>
+          <stop offset="50%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#ffd977"/>
+        </linearGradient>
+
+        <filter id="softShadow" x="-80%" y="-80%" width="260%" height="260%">
+          <feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#000000" flood-opacity=".20"/>
+          <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity=".10"/>
+        </filter>
+
+        <filter id="goldGlow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        <filter id="hardSpec" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="1.2" result="s"/>
+          <feMerge>
+            <feMergeNode in="s"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        <!-- preserve over/under weave -->
+        <mask id="cutTopOver">
+          <rect width="100%" height="100%" fill="white"/>
+          <path d="M450 128 C492 128 520 170 520 220 C520 259 500 297 470 330"
+                fill="none" stroke="black" stroke-width="120" stroke-linecap="round" stroke-linejoin="round"/>
+        </mask>
+
+        <mask id="cutCenterOver">
+          <rect width="100%" height="100%" fill="white"/>
+          <path d="M260 390 C322 350 390 330 450 330 C510 330 578 350 640 390"
+                fill="none" stroke="black" stroke-width="120" stroke-linecap="round" stroke-linejoin="round"/>
+        </mask>
+      </defs>
+
+      <!-- depth -->
+      <g filter="url(#softShadow)" opacity=".34" transform="translate(0,18)">
+        <path d="M450 130
+                 C490 130 520 170 520 220
+                 C520 260 500 300 470 330
+                 C510 310 560 300 610 300
+                 C710 300 780 370 780 460
+                 C780 550 710 620 620 620
+                 C550 620 500 580 460 520
+                 C420 580 370 620 300 620
+                 C210 620 140 550 140 460
+                 C140 370 210 300 310 300
+                 C360 300 410 310 450 330
+                 C420 300 400 260 400 220
+                 C400 170 430 130 450 130"
+              fill="none" stroke="#0a0a0c" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M260 390
+                 C322 350 390 330 450 330
+                 C510 330 578 350 640 390"
+              fill="none" stroke="#0a0a0c" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+
+      <!-- main body under top overpass -->
+      <g class="float" mask="url(#cutTopOver)">
+        <path d="M450 130
+                 C490 130 520 170 520 220
+                 C520 260 500 300 470 330
+                 C510 310 560 300 610 300
+                 C710 300 780 370 780 460
+                 C780 550 710 620 620 620
+                 C550 620 500 580 460 520
+                 C420 580 370 620 300 620
+                 C210 620 140 550 140 460
+                 C140 370 210 300 310 300
+                 C360 300 410 310 450 330
+                 C420 300 400 260 400 220
+                 C400 170 430 130 450 130"
+              fill="none" stroke="url(#obsidianMain)" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <path d="M450 130
+                 C490 130 520 170 520 220
+                 C520 260 500 300 470 330
+                 C510 310 560 300 610 300
+                 C710 300 780 370 780 460
+                 C780 550 710 620 620 620
+                 C550 620 500 580 460 520
+                 C420 580 370 620 300 620
+                 C210 620 140 550 140 460
+                 C140 370 210 300 310 300
+                 C360 300 410 310 450 330
+                 C420 300 400 260 400 220
+                 C400 170 430 130 450 130"
+              fill="none" stroke="url(#obsidianBevel)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- chipped obsidian panel lines -->
+        <path d="M452 154 C480 154 497 182 497 216 C497 247 481 277 454 307"
+              fill="none" stroke="#1d2027" stroke-width="9" stroke-linecap="round" opacity=".85"/>
+        <path d="M325 327 C252 327 192 376 192 460 C192 522 237 567 299 567 C343 567 382 546 411 506"
+              fill="none" stroke="#17191f" stroke-width="9" stroke-linecap="round" opacity=".8"/>
+        <path d="M489 507 C518 546 557 567 619 567 C680 567 728 522 728 460 C728 376 668 327 595 327"
+              fill="none" stroke="#17191f" stroke-width="9" stroke-linecap="round" opacity=".8"/>
+
+        <!-- gold channels -->
+        <path class="energyPulse"
+              d="M450 130
+                 C490 130 520 170 520 220
+                 C520 260 500 300 470 330
+                 C510 310 560 300 610 300
+                 C710 300 780 370 780 460
+                 C780 550 710 620 620 620
+                 C550 620 500 580 460 520
+                 C420 580 370 620 300 620
+                 C210 620 140 550 140 460
+                 C140 370 210 300 310 300
+                 C360 300 410 310 450 330
+                 C420 300 400 260 400 220
+                 C400 170 430 130 450 130"
+              fill="none" stroke="url(#savantGold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".85" filter="url(#goldGlow)"/>
+
+        <path class="goldTravel"
+              d="M450 130
+                 C490 130 520 170 520 220
+                 C520 260 500 300 470 330
+                 C510 310 560 300 610 300
+                 C710 300 780 370 780 460
+                 C780 550 710 620 620 620
+                 C550 620 500 580 460 520
+                 C420 580 370 620 300 620
+                 C210 620 140 550 140 460
+                 C140 370 210 300 310 300
+                 C360 300 410 310 450 330
+                 C420 300 400 260 400 220
+                 C400 170 430 130 450 130"
+              fill="none" stroke="url(#savantGoldHot)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"
+              stroke-dasharray="22 198" filter="url(#goldGlow)"/>
+      </g>
+
+      <!-- center crossing overpass -->
+      <g class="float">
+        <path d="M260 390
+                 C322 350 390 330 450 330
+                 C510 330 578 350 640 390"
+              fill="none" stroke="url(#obsidianMain)" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <path d="M260 390
+                 C322 350 390 330 450 330
+                 C510 330 578 350 640 390"
+              fill="none" stroke="url(#obsidianBevel)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <path d="M286 386
+                 C338 350 395 338 450 338
+                 C505 338 562 350 614 386"
+              fill="none" stroke="#1d2027" stroke-width="9" stroke-linecap="round" opacity=".82"/>
+
+        <path class="energyPulse"
+              d="M260 390
+                 C322 350 390 330 450 330
+                 C510 330 578 350 640 390"
+              fill="none" stroke="url(#savantGold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".92" filter="url(#goldGlow)"/>
+
+        <path class="goldTravel"
+              d="M260 390
+                 C322 350 390 330 450 330
+                 C510 330 578 350 640 390"
+              fill="none" stroke="url(#savantGoldHot)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"
+              stroke-dasharray="24 210" filter="url(#goldGlow)"/>
+      </g>
+
+      <!-- lower woven loop hidden under diagonal -->
+      <g class="float" mask="url(#cutCenterOver)">
+        <path d="M450 350
+                 C490 350 520 380 520 420
+                 C520 460 490 500 450 540
+                 C410 500 380 460 380 420
+                 C380 380 410 350 450 350"
+              fill="none" stroke="url(#obsidianMain)" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <path d="M450 350
+                 C490 350 520 380 520 420
+                 C520 460 490 500 450 540
+                 C410 500 380 460 380 420
+                 C380 380 410 350 450 350"
+              fill="none" stroke="url(#obsidianBevel)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <path d="M450 374
+                 C474 374 489 394 489 420
+                 C489 444 474 468 450 494
+                 C426 468 411 444 411 420
+                 C411 394 426 374 450 374"
+              fill="none" stroke="#1d2027" stroke-width="9" stroke-linecap="round" opacity=".82"/>
+
+        <path class="energyPulse"
+              d="M450 350
+                 C490 350 520 380 520 420
+                 C520 460 490 500 450 540
+                 C410 500 380 460 380 420
+                 C380 380 410 350 450 350"
+              fill="none" stroke="url(#savantGold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".88" filter="url(#goldGlow)"/>
+
+        <path class="goldTravel"
+              d="M450 350
+                 C490 350 520 380 520 420
+                 C520 460 490 500 450 540
+                 C410 500 380 460 380 420
+                 C380 380 410 350 450 350"
+              fill="none" stroke="url(#savantGoldHot)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"
+              stroke-dasharray="18 132" filter="url(#goldGlow)"/>
+      </g>
+
+      <!-- hard specular cuts -->
+      <g class="shineSweep" filter="url(#hardSpec)">
+        <path d="M430 138 C450 134 472 140 485 154" fill="none" stroke="url(#obsidianSpec)" stroke-width="8" stroke-linecap="round" opacity=".82"/>
+        <path d="M560 306 C611 311 655 338 682 378" fill="none" stroke="url(#obsidianSpec)" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+        <path d="M245 374 C263 345 294 320 338 308" fill="none" stroke="url(#obsidianSpec)" stroke-width="8" stroke-linecap="round" opacity=".66"/>
+        <path d="M428 366 C445 360 462 361 478 367" fill="none" stroke="url(#savantGoldHot)" stroke-width="5.4" stroke-linecap="round" opacity=".92"/>
+      </g>
+    </svg>
+
+    <div class="wordmark">savant</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "projectId": "savant-opus-prod",
+  "appId": "1:224732670028:web:42a9d776a4fd91eefbece9",
+  "apiKey": "AIzaSyA6X40nc8xKKL0zsSAaKPM7MhWSXvBd99w",
+  "authDomain": "savant-opus-prod.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-b8987f92-9c0c-4e60-a443-0a388f3dbf6e",
+  "storageBucket": "savant-opus-prod.firebasestorage.app",
+  "messagingSenderId": "224732670028",
+  "measurementId": ""
+}

@@ -1,0 +1,15 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+exports/
+
+archive/
+exports/
+firebase-applet-config.json
+savant-__-branding_matrix_v1.0.zip
