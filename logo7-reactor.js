@@ -20,8 +20,8 @@ const CFG = {
   preloadMs: 10000,
   dpr: Math.min(window.devicePixelRatio || 1, 2),
   exposure: 1.0,
-  bloomMin: 0.06,
-  bloomMax: 0.12,
+  bloomMin: 0.07,
+  bloomMax: 0.14,
   worldY: 0.08,
   worldZ: -2.72,
   ringRadius: 2.44,
@@ -134,12 +134,12 @@ function goldTraceMaterial(opacity = 0.10) {
 
 function darkGoldMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x9a6f22,
+    color: 0x7f5a16,
     metalness: 1.0,
-    roughness: 0.018,
+    roughness: 0.010,
     clearcoat: 1.0,
-    clearcoatRoughness: 0.001,
-    envMapIntensity: 22.0,
+    clearcoatRoughness: 0.0008,
+    envMapIntensity: 26.0,
     reflectivity: 1.0,
   });
 }
@@ -178,7 +178,7 @@ composer.addPass(bloomPass);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.022));
 
-const key = new THREE.SpotLight(0xffffff, 54, 66, 0.17, 0.9, 1.24);
+const key = new THREE.SpotLight(0xffffff, 58, 66, 0.16, 0.9, 1.26);
 key.position.set(0.0, 2.3, 5.9);
 scene.add(key);
 
@@ -186,7 +186,7 @@ const fill = new THREE.PointLight(0xf6f8ff, 1.25, 12);
 fill.position.set(-1.48, -0.02, 4.95);
 scene.add(fill);
 
-const rim = new THREE.PointLight(0xffffff, 12.0, 20);
+const rim = new THREE.PointLight(0xffffff, 13.2, 20);
 rim.position.set(1.56, 1.78, -3.05);
 scene.add(rim);
 
@@ -281,7 +281,7 @@ class Ring {
   }
 
   buildLensLEDs() {
-    this.ledCount = 18;
+    this.ledCount = 24;
     this.leds = [];
 
     for (let i = 0; i < this.ledCount; i++) {
@@ -289,7 +289,7 @@ class Ring {
       const radius = CFG.ringRadius - 0.18;
 
       const socket = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.105, 0.105, 0.045, 24),
+        new THREE.CylinderGeometry(0.072, 0.072, 0.030, 24),
         new THREE.MeshPhysicalMaterial({
           color: 0x090a0c,
           metalness: 1.0,
@@ -303,12 +303,12 @@ class Ring {
       socket.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.285
+        0.268
       );
       this.rig.add(socket);
 
       const lens = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.068, 0.068, 0.020, 24),
+        new THREE.CylinderGeometry(0.045, 0.045, 0.014, 24),
         new THREE.MeshPhysicalMaterial({
           color: 0x20140d,
           emissive: 0x000000,
@@ -324,12 +324,12 @@ class Ring {
       lens.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.312
+        0.286
       );
       this.rig.add(lens);
 
       const core = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.038, 0.038, 0.010, 20),
+        new THREE.CylinderGeometry(0.022, 0.022, 0.008, 20),
         new THREE.MeshBasicMaterial({
           color: 0xffc97b,
           transparent: true,
@@ -340,7 +340,7 @@ class Ring {
       core.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.326
+        0.298
       );
       this.rig.add(core);
 
@@ -349,11 +349,11 @@ class Ring {
         [0.12, 'rgba(255,214,140,0.42)'],
         [0.30, 'rgba(255,110,165,0.16)'],
         [1.00, 'rgba(255,255,255,0.0)']
-      ], 0.34, 0.012, 512);
+      ], 0.16, 0.010, 512);
       glow.position.set(
         Math.cos(a) * radius,
         Math.sin(a) * radius,
-        0.345
+        0.312
       );
       this.rig.add(glow);
 
@@ -387,21 +387,21 @@ class Ring {
       const c = gold.clone().lerp(pink, mix);
 
       this.leds[i].core.material.color.copy(c);
-      this.leds[i].core.material.opacity = 0.05 + level * 0.95;
+      this.leds[i].core.material.opacity = 0.08 + level * 0.92;
 
-      this.leds[i].glow.material.opacity = 0.008 + level * 0.12;
-      const gs = 0.18 + level * 0.10;
+      this.leds[i].glow.material.opacity = 0.010 + level * 0.18;
+      const gs = 0.08 + level * 0.10;
       this.leds[i].glow.scale.set(gs, gs, 1);
 
       this.leds[i].lens.material.color.setRGB(
-        0.10 + c.r * 0.15,
-        0.07 + c.g * 0.06,
-        0.07 + c.b * 0.10
+        0.06 + c.r * 0.10,
+        0.04 + c.g * 0.04,
+        0.05 + c.b * 0.08
       );
       this.leds[i].lens.material.emissive.setRGB(
-        c.r * level * 0.18,
-        c.g * level * 0.08,
-        c.b * level * 0.14
+        c.r * level * 0.26,
+        c.g * level * 0.10,
+        c.b * level * 0.20
       );
     }
   }
