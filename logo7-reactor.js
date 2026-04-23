@@ -22,8 +22,8 @@ const CFG = {
   exposure: 1.03,
   bloomMin: 0.08,
   bloomMax: 0.18,
-  worldY: -0.28,
-  worldZ: -3.2,
+  worldY: 0.06,
+  worldZ: -2.75,
   ringRadius: 2.78,
   logoTargetSize: 1.90,
 };
@@ -126,7 +126,7 @@ class Runtime {
     this.scene.background = new THREE.Color(0x07070a);
 
     this.camera = new THREE.OrthographicCamera(-4, 4, 4, -4, 0.1, 100);
-    this.camera.position.set(0, 0.2, 10);
+    this.camera.position.set(0, 0.12, 10);
     this.camera.lookAt(0, CFG.worldY, CFG.worldZ);
 
     this.pmrem = new THREE.PMREMGenerator(this.renderer);
@@ -144,15 +144,15 @@ class Runtime {
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.016));
 
-    this.sun = new THREE.SpotLight(0xffefdd, 75, 80, 0.26, 0.98, 1.0);
+    this.sun = new THREE.SpotLight(0xffefdd, 110, 80, 0.26, 0.98, 1.0);
     this.sun.position.set(3.2, 4.2, 5.8);
     this.scene.add(this.sun);
 
-    this.bounce = new THREE.PointLight(0xe08a4d, 1.1, 16);
+    this.bounce = new THREE.PointLight(0xe08a4d, 2.2, 18);
     this.bounce.position.set(-2.8, -1.2, 4.2);
     this.scene.add(this.bounce);
 
-    this.rim = new THREE.PointLight(0xffffff, 12.5, 22);
+    this.rim = new THREE.PointLight(0xffffff, 18.0, 24);
     this.rim.position.set(2.2, 1.6, -2.0);
     this.scene.add(this.rim);
 
@@ -347,8 +347,8 @@ class CrashWorld {
 class CrashRing {
   constructor(scene) {
     this.group = new THREE.Group();
-    this.group.position.set(0, CFG.worldY - 0.15, CFG.worldZ);
-    this.group.rotation.set(-0.82, 0.26, -0.12);
+    this.group.position.set(0, CFG.worldY - 0.02, CFG.worldZ + 0.10);
+    this.group.rotation.set(-0.38, 0.10, -0.04);
     scene.add(this.group);
 
     this.rig = new THREE.Group();
@@ -473,7 +473,7 @@ class CrashRing {
 class CrashLogo {
   constructor(scene) {
     this.group = new THREE.Group();
-    this.group.position.set(0, CFG.worldY + 0.10, CFG.worldZ + 0.10);
+    this.group.position.set(0, CFG.worldY + 0.18, CFG.worldZ + 0.34);
     scene.add(this.group);
 
     this.pivot = new THREE.Group();
@@ -502,7 +502,7 @@ class CrashLogo {
     root.position.sub(center);
 
     const maxDim = Math.max(size.x, size.y, size.z) || 1;
-    root.scale.setScalar(CFG.logoTargetSize / maxDim);
+    root.scale.setScalar((CFG.logoTargetSize * 1.18) / maxDim);
   }
 
   load() {
@@ -550,14 +550,14 @@ class CrashLogo {
     this.root.traverse((obj, i = 0) => {
       if (!obj.isMesh || !obj.material) return;
       const mat = obj.material;
-      mat.color.set('#6c4810');
+      mat.color.set('#8a5d14');
       mat.emissive.set('#120704');
-      mat.emissiveIntensity = 0.020 + settle * 0.018;
+      mat.emissiveIntensity = 0.035 + settle * 0.030;
       mat.metalness = 1.0;
       mat.roughness = 0.012 - settle * 0.003;
       mat.clearcoat = 1.0;
       mat.clearcoatRoughness = 0.0008;
-      mat.envMapIntensity = 30.0 + settle * 3.0;
+      mat.envMapIntensity = 38.0 + settle * 4.0;
       if ('specularIntensity' in mat) {
         mat.specularIntensity = 1.10 + Math.sin(t * 0.84 + i * 0.35) * 0.05;
       }
