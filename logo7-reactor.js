@@ -510,3 +510,172 @@ class KineticRing {
     }
   }
 }
+class LogoMark {
+  constructor(scene) {
+    this.group = new THREE.Group();
+    this.group.position.set(0, CFG.worldY, CFG.worldZ);
+    scene.add(this.group);
+
+    this.root = null;
+    this.forcefield = new THREE.Group();
+    this.group.add(this.forcefield);
+
+    this.forceShell = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.18, 4),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x6a8bff,
+        emissive: 0x1c2558,
+        emissiveIntensity: 0.3,
+        metalness: 0.0,
+        roughness: 0.16,
+        transparent: true,
+        opacity: 0.07,
+        transmission: 0.0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.02,
+        ior: 1.22
+      })
+    );
+    this.forcefield.add(this.forceShell);
+
+    this.forceWire = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.24, 2),
+      new THREE.MeshBasicMaterial({
+        color: 0x8bc3ff,
+        transparent: true,
+        opacity: 0.07,
+        wireframe: true
+      })
+    );
+    this.forcefield.add(this.forceWire);
+
+    this.forceHalo = makeRadialSprite([
+      [0.0, 'rgba(160,210,255,0.35)'],
+      [0.20, 'rgba(105,145,255,0.12)'],
+      [0.42, 'rgba(255,70,140,0.05)'],
+      [1.0, 'rgba(0,0,0,0)']
+    ], 2.9, 0.06, 512);
+    this.forceHalo.position.z = 0.05;
+    this.forcefield.add(this.forceHalo);
+
+    this.load();
+  }
+
+  applyMaterials(root) {
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      obj.material = darkGoldMaterial();
+      obj.castShadow = false;
+      obj.receiveShadow = false;
+      obj.geometry?.computeVertexNormals?.();
+    });
+  }
+
+  fitAndAnchor(root) {
+    const box = new THREE.Box3().setFromObject(root);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    root.position.sub(center);
+
+    const maxDim = Math.max(size.x, size.y, size.z) || 1;
+    root.scale.setScalar(CFG.logoTargetSize / maxDim);
+  }
+
+  load() {
+    const loader = new GLTFLoader();
+    loader.load(
+      '/public/assets/logo7/logo7.glb',
+      (gltf) => {
+        this.root = gltf.scene;
+        this.applyMaterials(this.root);
+        this.group.add(this.root);
+        this.fitAndAnchor(this.root);
+        STATE.loaded = true;
+      },
+      undefined,
+      () => {
+        this.root = new THREE.Mesh(
+          new THREE.TorusKnotGeometry(0.92, 0.20, 260, 40, 2, 3),
+          darkGoldMaterial()
+        );
+        this.group.add(this.root);
+        STATE.loaded = true;
+      }
+    );
+  }
+
+  update(t, progress) {
+    if (!this.root) return;
+
+    const settle = easeOutCubic(Math.min(progress / 0.72, 1));
+    this.group.position.y = CFG.worldY + (1 - settle) * 0.10;
+
+    const qStart = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.18, -0.62, 0.06));
+    const qFront = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.02, 0, 0));
+    this.group.quaternion.slerp(qStart.clone().slerp(qFront, settle), 0.08);
+
+    if (settle > 0.985) {
+      const liveQuat = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(
+          0.02 + Math.sin(t * 0.34) * 0.010,
+          t * 0.42,
+          0
+        )
+      );
+      this.group.quaternion.slerp(liveQuat, 0.028);
+    }
+
+    this.forcefield.rotation.x += 0.0012;
+    this.forcefield.rotation.y -= 0.0018;
+    this.forceWire.rotation.z += 0.0022;
+    this.forceShell.material.opacity = 0.045 + progress * 0.040 + Math.sin(t * 0.9) * 0.006;
+    this.forceWire.material.opacity = 0.05 + progress * 0.05;
+    this.forceHalo.material.opacity = 0.030 + progress * 0.050;
+    const fs = 1.0 + Math.sin(t * 0.8) * 0.012;
+    this.forcefield.scale.set(fs, fs, fs);
+
+    this.root.traverse((obj, i = 0) => {
+      if (!obj.isMesh || !obj.material) return;
+      const mat = obj.material;
+      mat.color.set('#6f4a10');
+      mat.emissive.set('#120704');
+      mat.emissiveIntensity = 0.022 + settle * 0.018;
+      mat.metalness = 1.0;
+      mat.roughness = 0.014 - settle * 0.004;
+      mat.clearcoat = 1.0;
+      mat.clearcoatRoughness = 0.0008;
+      mat.envMapIntensity = 28.0 + settle * 3.0;
+      if ('specularIntensity' in mat) {
+        mat.specularIntensity = 1.10 + Math.sin(t * 0.84 + i * 0.35) * 0.05;
+      }
+    });
+  }
+}
+class Flare {
+  constructor(scene) {
+    this.group = new THREE.Group();
+    this.group.position.set(0.10, CFG.worldY + 0.08, CFG.worldZ + 1.22);
+    scene.add(this.group);
+
+    this.center = makeRadialSprite([
+      [0.0, 'rgba(255,250,242,0.18)'],
+      [0.12, 'rgba(255,236,196,0.05)'],
+      [0.30, 'rgba(255,220,160,0.010)'],
+      [1.0, 'rgba(0,0,0,0)']
+    ], 0.40, 0.016);
+    this.group.add(this.center);
+
+    this.horiz = makeHorizontalFlare(5.8, 0.055, 0.018);
+    this.group.add(this.horiz);
+  }
+
+  update(t, progress) {
+    this.center.material.opacity = 0.014 + progress * 0.010 + Math.sin(t * 0.55) * 0.0015;
+    this.horiz.material.opacity = 0.016 + progress * 0.008 + Math.sin(t * 0.46 + 0.4) * 0.0015;
+  }
+}
+
+new Runtime();
