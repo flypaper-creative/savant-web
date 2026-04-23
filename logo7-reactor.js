@@ -19,15 +19,15 @@ if (!els.canvas) throw new Error('Missing #bg3d');
 const CFG = {
   preloadMs: 9500,
   dpr: Math.min(window.devicePixelRatio || 1, 2),
-  exposure: 1.04,
+  exposure: 1.05,
   bloomMin: 0.10,
   bloomMax: 0.20,
-  worldY: 0.06,
-  worldZ: -2.90,
-  ringRadius: 2.62,
-  logoTargetSize: 1.92,
-  chamberRadius: 8.6,
-  chamberDepth: 14.5,
+  worldY: 0.02,
+  worldZ: -3.0,
+  ringRadius: 2.68,
+  logoTargetSize: 1.96,
+  chamberRadius: 9.2,
+  chamberDepth: 16.0,
 };
 
 const STATE = {
@@ -74,13 +74,13 @@ function makeRadialSprite(stops, size, opacity, texSize = 1024) {
   return s;
 }
 
-function makeHorizontalFlare(width = 5.8, height = 0.055, opacity = 0.018) {
+function makeHorizontalFlare(width = 6.0, height = 0.055, opacity = 0.016) {
   const tex = makeCanvasTexture((g, w, h) => {
     const grad = g.createLinearGradient(0, h / 2, w, h / 2);
     grad.addColorStop(0.0, 'rgba(255,255,255,0)');
-    grad.addColorStop(0.25, 'rgba(255,220,170,0)');
-    grad.addColorStop(0.5, 'rgba(255,248,235,1)');
-    grad.addColorStop(0.72, 'rgba(255,90,150,0)');
+    grad.addColorStop(0.22, 'rgba(255,220,170,0)');
+    grad.addColorStop(0.50, 'rgba(255,248,235,1)');
+    grad.addColorStop(0.74, 'rgba(255,90,150,0)');
     grad.addColorStop(1.0, 'rgba(255,255,255,0)');
     g.fillStyle = grad;
     g.fillRect(0, 0, w, h);
@@ -104,10 +104,10 @@ function glossyBlackMaterial() {
   return new THREE.MeshPhysicalMaterial({
     color: 0x020307,
     metalness: 1.0,
-    roughness: 0.028,
+    roughness: 0.026,
     clearcoat: 1.0,
     clearcoatRoughness: 0.004,
-    envMapIntensity: 5.2,
+    envMapIntensity: 5.4,
     reflectivity: 1.0,
   });
 }
@@ -119,22 +119,23 @@ function secondaryBlackMaterial() {
     roughness: 0.055,
     clearcoat: 1.0,
     clearcoatRoughness: 0.010,
-    envMapIntensity: 4.0,
+    envMapIntensity: 4.2,
     reflectivity: 1.0,
   });
 }
 
 function darkGoldMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x6f4a10,
+    color: 0x6c4810,
     metalness: 1.0,
-    roughness: 0.014,
+    roughness: 0.012,
     clearcoat: 1.0,
     clearcoatRoughness: 0.0008,
-    envMapIntensity: 28.0,
+    envMapIntensity: 30.0,
     reflectivity: 1.0,
   });
 }
+
 class Runtime {
   constructor() {
     this.renderer = new THREE.WebGLRenderer({
@@ -164,31 +165,31 @@ class Runtime {
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
       CFG.bloomMin,
-      0.48,
+      0.46,
       0.95
     );
     this.composer.addPass(this.bloomPass);
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.018));
 
-    this.key = new THREE.SpotLight(0xffffff, 68, 72, 0.16, 0.98, 1.15);
-    this.key.position.set(0.45, 2.9, 6.6);
+    this.key = new THREE.SpotLight(0xffffff, 72, 76, 0.16, 0.98, 1.12);
+    this.key.position.set(0.55, 3.1, 6.8);
     this.scene.add(this.key);
 
-    this.fill = new THREE.PointLight(0xf7f9ff, 1.25, 14);
-    this.fill.position.set(-2.4, 0.45, 5.0);
+    this.fill = new THREE.PointLight(0xf7f9ff, 1.2, 14);
+    this.fill.position.set(-2.5, 0.5, 5.2);
     this.scene.add(this.fill);
 
-    this.rim = new THREE.PointLight(0xffffff, 15.5, 22);
-    this.rim.position.set(1.9, 1.9, -2.7);
+    this.rim = new THREE.PointLight(0xffffff, 16.5, 24);
+    this.rim.position.set(2.0, 2.0, -2.7);
     this.scene.add(this.rim);
 
-    this.goldKick = new THREE.PointLight(0xffd27d, 1.05, 11);
-    this.goldKick.position.set(0.0, -2.3, 3.0);
+    this.goldKick = new THREE.PointLight(0xffd17a, 1.05, 11);
+    this.goldKick.position.set(0.0, -2.5, 3.0);
     this.scene.add(this.goldKick);
 
-    this.pinkKick = new THREE.PointLight(0xff508a, 0.42, 9);
-    this.pinkKick.position.set(-1.9, 0.2, 2.8);
+    this.pinkKick = new THREE.PointLight(0xff4f89, 0.40, 9);
+    this.pinkKick.position.set(-2.0, 0.1, 2.9);
     this.scene.add(this.pinkKick);
 
     this.chamber = new Chamber(this.scene);
@@ -212,7 +213,7 @@ class Runtime {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const aspect = w / h;
-    const frustum = w < 700 ? 8.9 : 8.15;
+    const frustum = w < 700 ? 8.95 : 8.15;
 
     this.camera.left = -frustum * aspect / 2;
     this.camera.right = frustum * aspect / 2;
@@ -238,7 +239,7 @@ class Runtime {
     if (!STATE.loaded) {
       STATE.progress += (Math.min(target, 0.92) - STATE.progress) * 0.022;
     } else {
-      STATE.progress += (1 - STATE.progress) * 0.03;
+      STATE.progress += (1 - STATE.progress) * 0.030;
     }
 
     if (STATE.loaded && elapsed < CFG.preloadMs) {
@@ -280,40 +281,66 @@ class Chamber {
       new THREE.CylinderGeometry(CFG.chamberRadius, CFG.chamberRadius, CFG.chamberDepth, 96, 1, true),
       new THREE.MeshPhysicalMaterial({
         color: 0x010101,
-        metalness: 0.22,
+        metalness: 0.24,
         roughness: 0.985,
         side: THREE.BackSide,
       })
     );
     this.group.add(this.room);
 
+    this.floorDish = new THREE.Mesh(
+      new THREE.CylinderGeometry(5.5, 6.4, 0.28, 96, 1, true),
+      secondaryBlackMaterial()
+    );
+    this.floorDish.position.set(0, -2.75, CFG.worldZ + 0.25);
+    this.group.add(this.floorDish);
+
+    this.ceilingDish = new THREE.Mesh(
+      new THREE.CylinderGeometry(6.4, 5.5, 0.28, 96, 1, true),
+      secondaryBlackMaterial()
+    );
+    this.ceilingDish.position.set(0, 2.75, CFG.worldZ + 0.25);
+    this.group.add(this.ceilingDish);
+
     this.backPlate = new THREE.Mesh(
-      new THREE.CircleGeometry(6.1, 96),
+      new THREE.CircleGeometry(6.4, 96),
       new THREE.MeshPhysicalMaterial({
         color: 0x05070b,
-        metalness: 0.42,
+        metalness: 0.46,
         roughness: 0.84,
       })
     );
-    this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 2.9);
+    this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 3.05);
     this.group.add(this.backPlate);
 
-    this.primaryRing = new THREE.Mesh(
-      new THREE.TorusGeometry(3.45, 0.04, 18, 240),
+    this.backRingA = new THREE.Mesh(
+      new THREE.TorusGeometry(3.65, 0.045, 18, 240),
       new THREE.MeshBasicMaterial({ color: 0xe0b953, transparent: true, opacity: 0.10 })
     );
-    this.primaryRing.position.set(0, CFG.worldY, CFG.worldZ - 2.45);
-    this.group.add(this.primaryRing);
+    this.backRingA.position.set(0, CFG.worldY, CFG.worldZ - 2.52);
+    this.group.add(this.backRingA);
 
-    this.secondaryRing = new THREE.Mesh(
-      new THREE.TorusGeometry(3.00, 0.018, 18, 240),
+    this.backRingB = new THREE.Mesh(
+      new THREE.TorusGeometry(3.18, 0.018, 18, 240),
       new THREE.MeshBasicMaterial({ color: 0xff4c82, transparent: true, opacity: 0.06 })
     );
-    this.secondaryRing.position.set(0, CFG.worldY, CFG.worldZ - 2.24);
-    this.group.add(this.secondaryRing);
+    this.backRingB.position.set(0, CFG.worldY, CFG.worldZ - 2.28);
+    this.group.add(this.backRingB);
+
+    this.sideArchA = new THREE.Mesh(
+      new THREE.TorusGeometry(6.2, 0.11, 20, 180, Math.PI),
+      glossyBlackMaterial()
+    );
+    this.sideArchA.rotation.z = Math.PI / 2;
+    this.sideArchA.position.set(-3.2, 0, CFG.worldZ - 1.4);
+    this.group.add(this.sideArchA);
+
+    this.sideArchB = this.sideArchA.clone();
+    this.sideArchB.position.x *= -1;
+    this.group.add(this.sideArchB);
 
     this.scan = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.8, 0.05),
+      new THREE.PlaneGeometry(6.4, 0.055),
       new THREE.MeshBasicMaterial({
         color: 0xfff0d0,
         transparent: true,
@@ -321,7 +348,7 @@ class Chamber {
         blending: THREE.AdditiveBlending,
       })
     );
-    this.scan.position.set(0, 1.75, CFG.worldZ - 1.55);
+    this.scan.position.set(0, 1.8, CFG.worldZ - 1.8);
     this.group.add(this.scan);
 
     this.hazeA = makeRadialSprite([
@@ -329,28 +356,29 @@ class Chamber {
       [0.16, 'rgba(255,205,120,0.08)'],
       [0.34, 'rgba(255,76,130,0.035)'],
       [1.0, 'rgba(0,0,0,0)']
-    ], 13.0, 0.065, 512);
-    this.hazeA.position.set(0, 0.16, CFG.worldZ - 1.8);
+    ], 13.5, 0.062, 512);
+    this.hazeA.position.set(0, 0.18, CFG.worldZ - 1.9);
     this.group.add(this.hazeA);
 
     this.hazeB = makeRadialSprite([
       [0.0, 'rgba(255,245,220,0.18)'],
       [0.18, 'rgba(255,205,120,0.05)'],
       [1.0, 'rgba(0,0,0,0)']
-    ], 10.0, 0.04, 512);
-    this.hazeB.position.set(0, -0.44, CFG.worldZ - 1.55);
+    ], 10.4, 0.040, 512);
+    this.hazeB.position.set(0, -0.46, CFG.worldZ - 1.62);
     this.group.add(this.hazeB);
   }
 
   update(t, progress) {
-    this.primaryRing.rotation.z += 0.00075;
-    this.secondaryRing.rotation.z -= 0.00042;
-    this.scan.position.y = lerp(1.7, -1.7, progress);
-    this.scan.material.opacity = 0.07 + Math.sin(t * 1.4) * 0.018;
-    this.hazeA.material.opacity = 0.058 + Math.sin(t * 0.42) * 0.008;
-    this.hazeB.material.opacity = 0.035 + Math.cos(t * 0.32) * 0.006;
+    this.backRingA.rotation.z += 0.00075;
+    this.backRingB.rotation.z -= 0.00042;
+    this.scan.position.y = lerp(1.75, -1.75, progress);
+    this.scan.material.opacity = 0.07 + Math.sin(t * 1.35) * 0.018;
+    this.hazeA.material.opacity = 0.055 + Math.sin(t * 0.40) * 0.008;
+    this.hazeB.material.opacity = 0.035 + Math.cos(t * 0.30) * 0.006;
   }
 }
+
 class KineticRing {
   constructor(scene) {
     this.group = new THREE.Group();
@@ -510,15 +538,18 @@ class KineticRing {
     }
   }
 }
+
 class LogoMark {
   constructor(scene) {
     this.group = new THREE.Group();
     this.group.position.set(0, CFG.worldY, CFG.worldZ);
     scene.add(this.group);
 
-    this.root = null;
+    this.pivot = new THREE.Group();
+    this.group.add(this.pivot);
+
     this.forcefield = new THREE.Group();
-    this.group.add(this.forcefield);
+    this.pivot.add(this.forcefield);
 
     this.forceOuter = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.22, 5),
@@ -529,9 +560,9 @@ class LogoMark {
         metalness: 0.0,
         roughness: 0.08,
         transparent: true,
-        opacity: 0.045,
-        transmission: 0.14,
-        thickness: 0.22,
+        opacity: 0.032,
+        transmission: 0.18,
+        thickness: 0.24,
         clearcoat: 1.0,
         clearcoatRoughness: 0.01,
         ior: 1.18
@@ -548,8 +579,8 @@ class LogoMark {
         metalness: 0.0,
         roughness: 0.10,
         transparent: true,
-        opacity: 0.028,
-        transmission: 0.08,
+        opacity: 0.018,
+        transmission: 0.10,
         thickness: 0.12,
         clearcoat: 1.0,
         clearcoatRoughness: 0.014,
@@ -563,7 +594,7 @@ class LogoMark {
       new THREE.MeshBasicMaterial({
         color: 0x98c8ff,
         transparent: true,
-        opacity: 0.05,
+        opacity: 0.026,
         wireframe: true
       })
     );
@@ -574,7 +605,7 @@ class LogoMark {
       new THREE.MeshBasicMaterial({
         color: 0xff6ca8,
         transparent: true,
-        opacity: 0.028,
+        opacity: 0.014,
         wireframe: true
       })
     );
@@ -585,7 +616,7 @@ class LogoMark {
       new THREE.MeshBasicMaterial({
         color: 0x9ed2ff,
         transparent: true,
-        opacity: 0.05
+        opacity: 0.026
       })
     );
     this.forceRingA.rotation.x = Math.PI * 0.5;
@@ -596,7 +627,7 @@ class LogoMark {
       new THREE.MeshBasicMaterial({
         color: 0xff73ac,
         transparent: true,
-        opacity: 0.03
+        opacity: 0.014
       })
     );
     this.forceRingB.rotation.y = Math.PI * 0.5;
@@ -607,10 +638,11 @@ class LogoMark {
       [0.18, 'rgba(105,145,255,0.10)'],
       [0.36, 'rgba(255,70,140,0.04)'],
       [1.0, 'rgba(0,0,0,0)']
-    ], 3.05, 0.04, 512);
+    ], 3.05, 0.03, 512);
     this.forceHalo.position.z = 0.03;
     this.forcefield.add(this.forceHalo);
 
+    this.root = null;
     this.load();
   }
 
@@ -644,8 +676,7 @@ class LogoMark {
       (gltf) => {
         this.root = gltf.scene;
         this.applyMaterials(this.root);
-        this.group.add(this.root);
-        this.group.attach(this.forcefield);
+        this.pivot.add(this.root);
         this.fitAndAnchor(this.root);
         STATE.loaded = true;
       },
@@ -655,8 +686,7 @@ class LogoMark {
           new THREE.TorusKnotGeometry(0.92, 0.20, 260, 40, 2, 3),
           darkGoldMaterial()
         );
-        this.group.add(this.root);
-        this.group.attach(this.forcefield);
+        this.pivot.add(this.root);
         STATE.loaded = true;
       }
     );
@@ -666,21 +696,19 @@ class LogoMark {
     if (!this.root) return;
 
     const settle = easeOutCubic(Math.min(progress / 0.72, 1));
-    this.group.position.y = CFG.worldY + (1 - settle) * 0.10;
+    this.group.position.y = CFG.worldY;
 
-    const qStart = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.18, -0.62, 0.06));
-    const qFront = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.02, 0, 0));
+    const qStart = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.14, -0.55, 0.04));
+    const qFront = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.0, 0.0, 0.0));
     this.group.quaternion.slerp(qStart.clone().slerp(qFront, settle), 0.08);
 
     if (settle > 0.985) {
-      const liveQuat = new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(
-          0.02 + Math.sin(t * 0.34) * 0.010,
-          t * 0.42,
-          0
-        )
+      const spinQuat = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(0.0, t * 0.42, 0.0)
       );
-      this.group.quaternion.slerp(liveQuat, 0.028);
+      this.pivot.quaternion.slerp(spinQuat, 0.05);
+    } else {
+      this.pivot.quaternion.slerp(new THREE.Quaternion(), 0.08);
     }
 
     this.forcefield.rotation.x += 0.0010;
@@ -700,16 +728,13 @@ class LogoMark {
     this.forceRingA.rotation.z += 0.0032;
     this.forceRingB.rotation.x -= 0.0026;
 
-    this.forceOuter.material.opacity = 0.028 + progress * 0.022 + Math.sin(t * 0.8) * 0.004;
-    this.forceInner.material.opacity = 0.016 + progress * 0.014 + Math.cos(t * 0.9) * 0.003;
-
-    this.forceWireA.material.opacity = 0.028 + progress * 0.030;
-    this.forceWireB.material.opacity = 0.016 + progress * 0.018;
-
-    this.forceRingA.material.opacity = 0.028 + progress * 0.025;
-    this.forceRingB.material.opacity = 0.016 + progress * 0.016;
-
-    this.forceHalo.material.opacity = 0.018 + progress * 0.030;
+    this.forceOuter.material.opacity = 0.024 + progress * 0.022 + Math.sin(t * 0.8) * 0.004;
+    this.forceInner.material.opacity = 0.014 + progress * 0.012 + Math.cos(t * 0.9) * 0.003;
+    this.forceWireA.material.opacity = 0.022 + progress * 0.024;
+    this.forceWireB.material.opacity = 0.012 + progress * 0.014;
+    this.forceRingA.material.opacity = 0.020 + progress * 0.022;
+    this.forceRingB.material.opacity = 0.012 + progress * 0.014;
+    this.forceHalo.material.opacity = 0.015 + progress * 0.026;
 
     const fs = 1.0 + Math.sin(t * 0.8) * 0.010;
     this.forcefield.scale.set(fs, fs, fs);
@@ -717,20 +742,21 @@ class LogoMark {
     this.root.traverse((obj, i = 0) => {
       if (!obj.isMesh || !obj.material) return;
       const mat = obj.material;
-      mat.color.set('#6f4a10');
+      mat.color.set('#6c4810');
       mat.emissive.set('#120704');
-      mat.emissiveIntensity = 0.022 + settle * 0.018;
+      mat.emissiveIntensity = 0.020 + settle * 0.018;
       mat.metalness = 1.0;
-      mat.roughness = 0.014 - settle * 0.004;
+      mat.roughness = 0.012 - settle * 0.003;
       mat.clearcoat = 1.0;
       mat.clearcoatRoughness = 0.0008;
-      mat.envMapIntensity = 28.0 + settle * 3.0;
+      mat.envMapIntensity = 30.0 + settle * 3.0;
       if ('specularIntensity' in mat) {
         mat.specularIntensity = 1.10 + Math.sin(t * 0.84 + i * 0.35) * 0.05;
       }
     });
   }
 }
+
 class Flare {
   constructor(scene) {
     this.group = new THREE.Group();
@@ -745,7 +771,7 @@ class Flare {
     ], 0.40, 0.016);
     this.group.add(this.center);
 
-    this.horiz = makeHorizontalFlare(5.8, 0.055, 0.018);
+    this.horiz = makeHorizontalFlare(6.0, 0.055, 0.016);
     this.group.add(this.horiz);
   }
 
