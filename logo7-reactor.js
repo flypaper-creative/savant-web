@@ -520,42 +520,95 @@ class LogoMark {
     this.forcefield = new THREE.Group();
     this.group.add(this.forcefield);
 
-    this.forceShell = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1.18, 4),
+    this.forceOuter = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.22, 5),
       new THREE.MeshPhysicalMaterial({
-        color: 0x6a8bff,
-        emissive: 0x1c2558,
-        emissiveIntensity: 0.3,
+        color: 0x84a8ff,
+        emissive: 0x17224a,
+        emissiveIntensity: 0.22,
         metalness: 0.0,
-        roughness: 0.16,
+        roughness: 0.08,
         transparent: true,
-        opacity: 0.07,
-        transmission: 0.0,
+        opacity: 0.045,
+        transmission: 0.14,
+        thickness: 0.22,
         clearcoat: 1.0,
-        clearcoatRoughness: 0.02,
-        ior: 1.22
+        clearcoatRoughness: 0.01,
+        ior: 1.18
       })
     );
-    this.forcefield.add(this.forceShell);
+    this.forcefield.add(this.forceOuter);
 
-    this.forceWire = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1.24, 2),
-      new THREE.MeshBasicMaterial({
-        color: 0x8bc3ff,
+    this.forceInner = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.12, 3),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x6f8cff,
+        emissive: 0x101a38,
+        emissiveIntensity: 0.18,
+        metalness: 0.0,
+        roughness: 0.10,
         transparent: true,
-        opacity: 0.07,
+        opacity: 0.028,
+        transmission: 0.08,
+        thickness: 0.12,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.014,
+        ior: 1.16
+      })
+    );
+    this.forcefield.add(this.forceInner);
+
+    this.forceWireA = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.27, 2),
+      new THREE.MeshBasicMaterial({
+        color: 0x98c8ff,
+        transparent: true,
+        opacity: 0.05,
         wireframe: true
       })
     );
-    this.forcefield.add(this.forceWire);
+    this.forcefield.add(this.forceWireA);
+
+    this.forceWireB = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.05, 1),
+      new THREE.MeshBasicMaterial({
+        color: 0xff6ca8,
+        transparent: true,
+        opacity: 0.028,
+        wireframe: true
+      })
+    );
+    this.forcefield.add(this.forceWireB);
+
+    this.forceRingA = new THREE.Mesh(
+      new THREE.TorusGeometry(1.34, 0.010, 12, 180),
+      new THREE.MeshBasicMaterial({
+        color: 0x9ed2ff,
+        transparent: true,
+        opacity: 0.05
+      })
+    );
+    this.forceRingA.rotation.x = Math.PI * 0.5;
+    this.forcefield.add(this.forceRingA);
+
+    this.forceRingB = new THREE.Mesh(
+      new THREE.TorusGeometry(1.18, 0.008, 12, 180),
+      new THREE.MeshBasicMaterial({
+        color: 0xff73ac,
+        transparent: true,
+        opacity: 0.03
+      })
+    );
+    this.forceRingB.rotation.y = Math.PI * 0.5;
+    this.forcefield.add(this.forceRingB);
 
     this.forceHalo = makeRadialSprite([
-      [0.0, 'rgba(160,210,255,0.35)'],
-      [0.20, 'rgba(105,145,255,0.12)'],
-      [0.42, 'rgba(255,70,140,0.05)'],
+      [0.0, 'rgba(160,210,255,0.28)'],
+      [0.18, 'rgba(105,145,255,0.10)'],
+      [0.36, 'rgba(255,70,140,0.04)'],
       [1.0, 'rgba(0,0,0,0)']
-    ], 2.9, 0.06, 512);
-    this.forceHalo.position.z = 0.05;
+    ], 3.05, 0.04, 512);
+    this.forceHalo.position.z = 0.03;
     this.forcefield.add(this.forceHalo);
 
     this.load();
