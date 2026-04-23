@@ -600,3 +600,28 @@ class LogoMark {
     });
   }
 }
+class Flare {
+  constructor(scene) {
+    this.group = new THREE.Group();
+    this.group.position.set(0.12, CFG.worldY + 0.08, CFG.worldZ + 1.16);
+    scene.add(this.group);
+
+    this.center = makeRadialSprite([
+      [0.0, 'rgba(255,250,242,0.20)'],
+      [0.12, 'rgba(255,236,196,0.05)'],
+      [0.30, 'rgba(255,220,160,0.010)'],
+      [1.0, 'rgba(0,0,0,0)']
+    ], 0.38, 0.016);
+    this.group.add(this.center);
+
+    this.horiz = makeHorizontalFlare(5.2, 0.05, 0.018);
+    this.group.add(this.horiz);
+  }
+
+  update(t, progress) {
+    this.center.material.opacity = 0.014 + progress * 0.010 + Math.sin(t * 0.55) * 0.0015;
+    this.horiz.material.opacity = 0.016 + progress * 0.008 + Math.sin(t * 0.46 + 0.4) * 0.0015;
+  }
+}
+
+new Runtime();
