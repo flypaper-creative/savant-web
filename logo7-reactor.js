@@ -17,17 +17,17 @@ const els = {
 if (!els.canvas) throw new Error('Missing #bg3d');
 
 const CFG = {
-  preloadMs: 9000,
+  preloadMs: 9500,
   dpr: Math.min(window.devicePixelRatio || 1, 2),
-  exposure: 1.02,
-  bloomMin: 0.08,
-  bloomMax: 0.16,
-  worldY: 0.08,
-  worldZ: -2.72,
-  ringRadius: 2.52,
+  exposure: 1.04,
+  bloomMin: 0.10,
+  bloomMax: 0.20,
+  worldY: 0.06,
+  worldZ: -2.90,
+  ringRadius: 2.62,
   logoTargetSize: 1.92,
-  chamberRadius: 8.2,
-  chamberDepth: 14.0,
+  chamberRadius: 8.6,
+  chamberDepth: 14.5,
 };
 
 const STATE = {
@@ -74,13 +74,13 @@ function makeRadialSprite(stops, size, opacity, texSize = 1024) {
   return s;
 }
 
-function makeHorizontalFlare(width = 5.4, height = 0.05, opacity = 0.018) {
+function makeHorizontalFlare(width = 5.8, height = 0.055, opacity = 0.018) {
   const tex = makeCanvasTexture((g, w, h) => {
     const grad = g.createLinearGradient(0, h / 2, w, h / 2);
     grad.addColorStop(0.0, 'rgba(255,255,255,0)');
     grad.addColorStop(0.25, 'rgba(255,220,170,0)');
-    grad.addColorStop(0.5, 'rgba(255,248,232,1)');
-    grad.addColorStop(0.75, 'rgba(255,120,180,0)');
+    grad.addColorStop(0.5, 'rgba(255,248,235,1)');
+    grad.addColorStop(0.72, 'rgba(255,90,150,0)');
     grad.addColorStop(1.0, 'rgba(255,255,255,0)');
     g.fillStyle = grad;
     g.fillRect(0, 0, w, h);
@@ -102,36 +102,36 @@ function makeHorizontalFlare(width = 5.4, height = 0.05, opacity = 0.018) {
 
 function glossyBlackMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x020204,
+    color: 0x020307,
     metalness: 1.0,
-    roughness: 0.032,
+    roughness: 0.028,
     clearcoat: 1.0,
     clearcoatRoughness: 0.004,
-    envMapIntensity: 4.8,
+    envMapIntensity: 5.2,
     reflectivity: 1.0,
   });
 }
 
-function blackSecondaryMaterial() {
+function secondaryBlackMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x07090d,
+    color: 0x070a10,
     metalness: 1.0,
-    roughness: 0.06,
+    roughness: 0.055,
     clearcoat: 1.0,
-    clearcoatRoughness: 0.01,
-    envMapIntensity: 3.8,
+    clearcoatRoughness: 0.010,
+    envMapIntensity: 4.0,
     reflectivity: 1.0,
   });
 }
 
 function darkGoldMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: 0x775116,
+    color: 0x6f4a10,
     metalness: 1.0,
-    roughness: 0.018,
+    roughness: 0.014,
     clearcoat: 1.0,
-    clearcoatRoughness: 0.001,
-    envMapIntensity: 24.0,
+    clearcoatRoughness: 0.0008,
+    envMapIntensity: 28.0,
     reflectivity: 1.0,
   });
 }
@@ -165,30 +165,30 @@ class Runtime {
       new THREE.Vector2(window.innerWidth, window.innerHeight),
       CFG.bloomMin,
       0.48,
-      0.96
+      0.95
     );
     this.composer.addPass(this.bloomPass);
 
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.025));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.018));
 
-    this.key = new THREE.SpotLight(0xffffff, 54, 64, 0.17, 0.95, 1.2);
-    this.key.position.set(0.35, 2.6, 6.2);
+    this.key = new THREE.SpotLight(0xffffff, 68, 72, 0.16, 0.98, 1.15);
+    this.key.position.set(0.45, 2.9, 6.6);
     this.scene.add(this.key);
 
-    this.fill = new THREE.PointLight(0xf6f8ff, 1.2, 14);
-    this.fill.position.set(-2.2, 0.4, 4.8);
+    this.fill = new THREE.PointLight(0xf7f9ff, 1.25, 14);
+    this.fill.position.set(-2.4, 0.45, 5.0);
     this.scene.add(this.fill);
 
-    this.rim = new THREE.PointLight(0xffffff, 13.5, 20);
-    this.rim.position.set(1.8, 1.8, -2.8);
+    this.rim = new THREE.PointLight(0xffffff, 15.5, 22);
+    this.rim.position.set(1.9, 1.9, -2.7);
     this.scene.add(this.rim);
 
-    this.goldKick = new THREE.PointLight(0xffd686, 1.0, 10);
-    this.goldKick.position.set(0.0, -2.2, 2.8);
+    this.goldKick = new THREE.PointLight(0xffd27d, 1.05, 11);
+    this.goldKick.position.set(0.0, -2.3, 3.0);
     this.scene.add(this.goldKick);
 
-    this.pinkKick = new THREE.PointLight(0xff4b84, 0.45, 8);
-    this.pinkKick.position.set(-1.8, 0.2, 2.6);
+    this.pinkKick = new THREE.PointLight(0xff508a, 0.42, 9);
+    this.pinkKick.position.set(-1.9, 0.2, 2.8);
     this.scene.add(this.pinkKick);
 
     this.chamber = new Chamber(this.scene);
@@ -212,7 +212,7 @@ class Runtime {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const aspect = w / h;
-    const frustum = w < 700 ? 8.8 : 8.0;
+    const frustum = w < 700 ? 8.9 : 8.15;
 
     this.camera.left = -frustum * aspect / 2;
     this.camera.right = frustum * aspect / 2;
@@ -236,7 +236,7 @@ class Runtime {
     const target = clamp(elapsed / CFG.preloadMs, 0, 1);
 
     if (!STATE.loaded) {
-      STATE.progress += (Math.min(target, 0.92) - STATE.progress) * 0.024;
+      STATE.progress += (Math.min(target, 0.92) - STATE.progress) * 0.022;
     } else {
       STATE.progress += (1 - STATE.progress) * 0.03;
     }
@@ -280,7 +280,7 @@ class Chamber {
       new THREE.CylinderGeometry(CFG.chamberRadius, CFG.chamberRadius, CFG.chamberDepth, 96, 1, true),
       new THREE.MeshPhysicalMaterial({
         color: 0x010101,
-        metalness: 0.18,
+        metalness: 0.22,
         roughness: 0.985,
         side: THREE.BackSide,
       })
@@ -288,66 +288,66 @@ class Chamber {
     this.group.add(this.room);
 
     this.backPlate = new THREE.Mesh(
-      new THREE.CircleGeometry(6.0, 96),
+      new THREE.CircleGeometry(6.1, 96),
       new THREE.MeshPhysicalMaterial({
         color: 0x05070b,
-        metalness: 0.36,
+        metalness: 0.42,
         roughness: 0.84,
       })
     );
-    this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 2.75);
+    this.backPlate.position.set(0, CFG.worldY, CFG.worldZ - 2.9);
     this.group.add(this.backPlate);
 
-    this.ringA = new THREE.Mesh(
-      new THREE.TorusGeometry(3.35, 0.04, 18, 220),
-      new THREE.MeshBasicMaterial({ color: 0xe2be57, transparent: true, opacity: 0.10 })
+    this.primaryRing = new THREE.Mesh(
+      new THREE.TorusGeometry(3.45, 0.04, 18, 240),
+      new THREE.MeshBasicMaterial({ color: 0xe0b953, transparent: true, opacity: 0.10 })
     );
-    this.ringA.position.set(0, CFG.worldY, CFG.worldZ - 2.35);
-    this.group.add(this.ringA);
+    this.primaryRing.position.set(0, CFG.worldY, CFG.worldZ - 2.45);
+    this.group.add(this.primaryRing);
 
-    this.ringB = new THREE.Mesh(
-      new THREE.TorusGeometry(2.92, 0.018, 18, 220),
-      new THREE.MeshBasicMaterial({ color: 0xff4a7a, transparent: true, opacity: 0.06 })
+    this.secondaryRing = new THREE.Mesh(
+      new THREE.TorusGeometry(3.00, 0.018, 18, 240),
+      new THREE.MeshBasicMaterial({ color: 0xff4c82, transparent: true, opacity: 0.06 })
     );
-    this.ringB.position.set(0, CFG.worldY, CFG.worldZ - 2.16);
-    this.group.add(this.ringB);
+    this.secondaryRing.position.set(0, CFG.worldY, CFG.worldZ - 2.24);
+    this.group.add(this.secondaryRing);
 
     this.scan = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.6, 0.055),
+      new THREE.PlaneGeometry(5.8, 0.05),
       new THREE.MeshBasicMaterial({
-        color: 0xfff1d1,
+        color: 0xfff0d0,
         transparent: true,
-        opacity: 0.10,
+        opacity: 0.09,
         blending: THREE.AdditiveBlending,
       })
     );
-    this.scan.position.set(0, 1.8, CFG.worldZ - 1.4);
+    this.scan.position.set(0, 1.75, CFG.worldZ - 1.55);
     this.group.add(this.scan);
 
     this.hazeA = makeRadialSprite([
-      [0.0, 'rgba(255,240,210,0.22)'],
-      [0.16, 'rgba(255,196,110,0.07)'],
-      [0.34, 'rgba(255,80,120,0.03)'],
+      [0.0, 'rgba(255,245,220,0.26)'],
+      [0.16, 'rgba(255,205,120,0.08)'],
+      [0.34, 'rgba(255,76,130,0.035)'],
       [1.0, 'rgba(0,0,0,0)']
-    ], 12.5, 0.06, 512);
-    this.hazeA.position.set(0, 0.16, CFG.worldZ - 1.7);
+    ], 13.0, 0.065, 512);
+    this.hazeA.position.set(0, 0.16, CFG.worldZ - 1.8);
     this.group.add(this.hazeA);
 
     this.hazeB = makeRadialSprite([
-      [0.0, 'rgba(255,240,210,0.16)'],
-      [0.18, 'rgba(255,196,110,0.05)'],
+      [0.0, 'rgba(255,245,220,0.18)'],
+      [0.18, 'rgba(255,205,120,0.05)'],
       [1.0, 'rgba(0,0,0,0)']
-    ], 9.6, 0.04, 512);
-    this.hazeB.position.set(0, -0.44, CFG.worldZ - 1.45);
+    ], 10.0, 0.04, 512);
+    this.hazeB.position.set(0, -0.44, CFG.worldZ - 1.55);
     this.group.add(this.hazeB);
   }
 
   update(t, progress) {
-    this.ringA.rotation.z += 0.0008;
-    this.ringB.rotation.z -= 0.00045;
+    this.primaryRing.rotation.z += 0.00075;
+    this.secondaryRing.rotation.z -= 0.00042;
     this.scan.position.y = lerp(1.7, -1.7, progress);
-    this.scan.material.opacity = 0.08 + Math.sin(t * 1.6) * 0.02;
-    this.hazeA.material.opacity = 0.055 + Math.sin(t * 0.42) * 0.008;
+    this.scan.material.opacity = 0.07 + Math.sin(t * 1.4) * 0.018;
+    this.hazeA.material.opacity = 0.058 + Math.sin(t * 0.42) * 0.008;
     this.hazeB.material.opacity = 0.035 + Math.cos(t * 0.32) * 0.006;
   }
 }
@@ -361,51 +361,55 @@ class KineticRing {
     this.group.add(this.rig);
 
     this.outer = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius, 0.22, 42, 320),
+      new THREE.TorusGeometry(CFG.ringRadius, 0.22, 42, 340),
       glossyBlackMaterial()
     );
     this.rig.add(this.outer);
 
     this.mid = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius - 0.08, 0.09, 34, 280),
-      blackSecondaryMaterial()
+      new THREE.TorusGeometry(CFG.ringRadius - 0.08, 0.09, 34, 300),
+      secondaryBlackMaterial()
     );
     this.rig.add(this.mid);
 
     this.inner = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius - 0.30, 0.028, 20, 240),
+      new THREE.TorusGeometry(CFG.ringRadius - 0.30, 0.028, 20, 260),
       glossyBlackMaterial()
     );
     this.rig.add(this.inner);
 
-    this.trace = new THREE.Mesh(
-      new THREE.TorusGeometry(CFG.ringRadius - 0.345, 0.010, 16, 220),
-      new THREE.MeshBasicMaterial({ color: 0xd2a24f, transparent: true, opacity: 0.08 })
+    this.energyTrace = new THREE.Mesh(
+      new THREE.TorusGeometry(CFG.ringRadius - 0.345, 0.010, 16, 240),
+      new THREE.MeshBasicMaterial({
+        color: 0xd2a24f,
+        transparent: true,
+        opacity: 0.07
+      })
     );
-    this.rig.add(this.trace);
+    this.rig.add(this.energyTrace);
 
-    this.blades = [];
-    const bladeGeo = new THREE.BoxGeometry(0.10, 0.80, 0.06);
+    this.fins = [];
+    const finGeo = new THREE.BoxGeometry(0.09, 0.82, 0.06);
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
-      const blade = new THREE.Mesh(bladeGeo, blackSecondaryMaterial());
-      blade.rotation.z = a;
-      blade.position.z = -0.03;
-      this.rig.add(blade);
-      this.blades.push(blade);
+      const fin = new THREE.Mesh(finGeo, secondaryBlackMaterial());
+      fin.rotation.z = a;
+      fin.position.z = -0.03;
+      this.rig.add(fin);
+      this.fins.push(fin);
     }
 
+    this.ledCount = 20;
     this.leds = [];
-    this.ledCount = 22;
 
     for (let i = 0; i < this.ledCount; i++) {
       const a = Math.PI / 2 - (i / this.ledCount) * Math.PI * 2;
       const radius = CFG.ringRadius - 0.17;
 
       const socket = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.070, 0.070, 0.024, 24),
+        new THREE.CylinderGeometry(0.058, 0.058, 0.020, 24),
         new THREE.MeshPhysicalMaterial({
-          color: 0x090b0f,
+          color: 0x090b10,
           metalness: 1.0,
           roughness: 0.04,
           clearcoat: 1.0,
@@ -414,16 +418,16 @@ class KineticRing {
         })
       );
       socket.rotation.x = Math.PI / 2;
-      socket.position.set(Math.cos(a) * radius, Math.sin(a) * radius, 0.268);
+      socket.position.set(Math.cos(a) * radius, Math.sin(a) * radius, 0.270);
       this.rig.add(socket);
 
       const lens = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.040, 0.040, 0.012, 24),
+        new THREE.CylinderGeometry(0.032, 0.032, 0.010, 24),
         new THREE.MeshPhysicalMaterial({
-          color: 0x181012,
+          color: 0x171015,
           emissive: 0x000000,
           metalness: 0.0,
-          roughness: 0.05,
+          roughness: 0.045,
           clearcoat: 1.0,
           clearcoatRoughness: 0.002,
           ior: 1.45
@@ -434,9 +438,9 @@ class KineticRing {
       this.rig.add(lens);
 
       const core = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.020, 0.020, 0.008, 20),
+        new THREE.CylinderGeometry(0.016, 0.016, 0.007, 20),
         new THREE.MeshBasicMaterial({
-          color: 0xffd38c,
+          color: 0xffd38f,
           transparent: true,
           opacity: 0.08,
         })
@@ -446,9 +450,9 @@ class KineticRing {
       this.rig.add(core);
 
       const glow = makeRadialSprite([
-        [0.0, 'rgba(255,245,220,0.96)'],
-        [0.14, 'rgba(255,208,140,0.44)'],
-        [0.30, 'rgba(255,86,134,0.14)'],
+        [0.0, 'rgba(255,246,222,0.96)'],
+        [0.14, 'rgba(255,214,150,0.42)'],
+        [0.30, 'rgba(255,90,150,0.14)'],
         [1.0, 'rgba(0,0,0,0)']
       ], 0.16, 0.010, 512);
       glow.position.set(Math.cos(a) * radius, Math.sin(a) * radius, 0.312);
@@ -461,13 +465,14 @@ class KineticRing {
   update(t, progress) {
     this.outer.rotation.z += 0.00012;
     this.mid.rotation.z -= 0.00005;
-    this.inner.rotation.z += 0.00007;
-    this.trace.rotation.z -= 0.00016;
+    this.inner.rotation.z += 0.00008;
+    this.energyTrace.rotation.z -= 0.00016;
+
     this.rig.rotation.z = Math.sin(t * 0.05) * 0.0011;
     this.rig.rotation.x = Math.sin(t * 0.04) * 0.0016;
 
-    for (let i = 0; i < this.blades.length; i++) {
-      this.blades[i].position.z = -0.03 + Math.sin(t * 0.32 + i) * 0.008;
+    for (let i = 0; i < this.fins.length; i++) {
+      this.fins[i].position.z = -0.03 + Math.sin(t * 0.30 + i) * 0.008;
     }
 
     const front = progress * this.ledCount;
@@ -479,9 +484,9 @@ class KineticRing {
       if (i < lit) level = 1;
       else if (i === lit) level = frac;
 
-      const cyc = (i / this.ledCount + t * 0.014) % 1;
-      const gold = new THREE.Color(0xe2b45a);
-      const pink = new THREE.Color(0xd55aa0);
+      const cyc = (i / this.ledCount + t * 0.012) % 1;
+      const gold = new THREE.Color(0xe0b45b);
+      const pink = new THREE.Color(0xd55da2);
       const mix = 0.5 + 0.5 * Math.sin(cyc * Math.PI * 2.0);
       const c = gold.clone().lerp(pink, mix);
 
@@ -489,7 +494,7 @@ class KineticRing {
       this.leds[i].core.material.opacity = 0.08 + level * 0.92;
 
       this.leds[i].glow.material.opacity = 0.010 + level * 0.18;
-      const gs = 0.08 + level * 0.10;
+      const gs = 0.08 + level * 0.09;
       this.leds[i].glow.scale.set(gs, gs, 1);
 
       this.leds[i].lens.material.color.setRGB(
@@ -498,130 +503,10 @@ class KineticRing {
         0.05 + c.b * 0.08
       );
       this.leds[i].lens.material.emissive.setRGB(
-        c.r * level * 0.24,
-        c.g * level * 0.09,
-        c.b * level * 0.18
+        c.r * level * 0.25,
+        c.g * level * 0.10,
+        c.b * level * 0.20
       );
     }
   }
 }
-class LogoMark {
-  constructor(scene) {
-    this.group = new THREE.Group();
-    this.group.position.set(0, CFG.worldY, CFG.worldZ);
-    scene.add(this.group);
-    this.root = null;
-    this.load();
-  }
-
-  applyMaterials(root) {
-    root.traverse((obj) => {
-      if (!obj.isMesh) return;
-      obj.material = darkGoldMaterial();
-      obj.castShadow = false;
-      obj.receiveShadow = false;
-      if (obj.geometry) {
-        obj.geometry.computeVertexNormals?.();
-      }
-    });
-  }
-
-  fit(root) {
-    const box = new THREE.Box3().setFromObject(root);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-
-    root.position.sub(center);
-
-    const maxDim = Math.max(size.x, size.y, size.z) || 1;
-    root.scale.setScalar(CFG.logoTargetSize / maxDim);
-  }
-
-  load() {
-    const loader = new GLTFLoader();
-    loader.load(
-      '/public/assets/logo7/logo7.glb',
-      (gltf) => {
-        this.root = gltf.scene;
-        this.applyMaterials(this.root);
-        this.group.add(this.root);
-        this.fit(this.root);
-        STATE.loaded = true;
-      },
-      undefined,
-      () => {
-        this.root = new THREE.Mesh(
-          new THREE.TorusKnotGeometry(0.92, 0.20, 260, 40, 2, 3),
-          darkGoldMaterial()
-        );
-        this.group.add(this.root);
-        STATE.loaded = true;
-      }
-    );
-  }
-
-  update(t, progress) {
-    if (!this.root) return;
-
-    const settle = easeOutCubic(Math.min(progress / 0.70, 1));
-    this.group.position.y = CFG.worldY + (1 - settle) * 0.10;
-
-    const qStart = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.18, -0.62, 0.06));
-    const qFront = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.02, 0, 0));
-    this.group.quaternion.slerp(qStart.clone().slerp(qFront, settle), 0.08);
-
-    if (settle > 0.985) {
-      const liveQuat = new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(
-          0.02 + Math.sin(t * 0.34) * 0.010,
-          t * 0.42,
-          0
-        )
-      );
-      this.group.quaternion.slerp(liveQuat, 0.028);
-    }
-
-    this.root.traverse((obj, i = 0) => {
-      if (!obj.isMesh || !obj.material) return;
-      const mat = obj.material;
-      mat.color.set('#775116');
-      mat.emissive.set('#110704');
-      mat.emissiveIntensity = 0.025 + settle * 0.018;
-      mat.metalness = 1.0;
-      mat.roughness = 0.018 - settle * 0.006;
-      mat.clearcoat = 1.0;
-      mat.clearcoatRoughness = 0.001;
-      mat.envMapIntensity = 24.0 + settle * 2.0;
-      if ('specularIntensity' in mat) {
-        mat.specularIntensity = 1.04 + Math.sin(t * 0.8 + i * 0.3) * 0.04;
-      }
-    });
-  }
-}
-class Flare {
-  constructor(scene) {
-    this.group = new THREE.Group();
-    this.group.position.set(0.12, CFG.worldY + 0.08, CFG.worldZ + 1.16);
-    scene.add(this.group);
-
-    this.center = makeRadialSprite([
-      [0.0, 'rgba(255,250,242,0.20)'],
-      [0.12, 'rgba(255,236,196,0.05)'],
-      [0.30, 'rgba(255,220,160,0.010)'],
-      [1.0, 'rgba(0,0,0,0)']
-    ], 0.38, 0.016);
-    this.group.add(this.center);
-
-    this.horiz = makeHorizontalFlare(5.2, 0.05, 0.018);
-    this.group.add(this.horiz);
-  }
-
-  update(t, progress) {
-    this.center.material.opacity = 0.014 + progress * 0.010 + Math.sin(t * 0.55) * 0.0015;
-    this.horiz.material.opacity = 0.016 + progress * 0.008 + Math.sin(t * 0.46 + 0.4) * 0.0015;
-  }
-}
-
-new Runtime();
