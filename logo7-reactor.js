@@ -645,6 +645,7 @@ class LogoMark {
         this.root = gltf.scene;
         this.applyMaterials(this.root);
         this.group.add(this.root);
+        this.group.attach(this.forcefield);
         this.fitAndAnchor(this.root);
         STATE.loaded = true;
       },
@@ -655,6 +656,7 @@ class LogoMark {
           darkGoldMaterial()
         );
         this.group.add(this.root);
+        this.group.attach(this.forcefield);
         STATE.loaded = true;
       }
     );
@@ -681,13 +683,35 @@ class LogoMark {
       this.group.quaternion.slerp(liveQuat, 0.028);
     }
 
-    this.forcefield.rotation.x += 0.0012;
-    this.forcefield.rotation.y -= 0.0018;
-    this.forceWire.rotation.z += 0.0022;
-    this.forceShell.material.opacity = 0.045 + progress * 0.040 + Math.sin(t * 0.9) * 0.006;
-    this.forceWire.material.opacity = 0.05 + progress * 0.05;
-    this.forceHalo.material.opacity = 0.030 + progress * 0.050;
-    const fs = 1.0 + Math.sin(t * 0.8) * 0.012;
+    this.forcefield.rotation.x += 0.0010;
+    this.forcefield.rotation.y -= 0.0016;
+    this.forcefield.rotation.z += 0.0007;
+
+    this.forceOuter.rotation.x -= 0.0012;
+    this.forceOuter.rotation.y += 0.0015;
+
+    this.forceInner.rotation.x += 0.0014;
+    this.forceInner.rotation.z -= 0.0018;
+
+    this.forceWireA.rotation.z += 0.0022;
+    this.forceWireB.rotation.x -= 0.0017;
+    this.forceWireB.rotation.y += 0.0011;
+
+    this.forceRingA.rotation.z += 0.0032;
+    this.forceRingB.rotation.x -= 0.0026;
+
+    this.forceOuter.material.opacity = 0.028 + progress * 0.022 + Math.sin(t * 0.8) * 0.004;
+    this.forceInner.material.opacity = 0.016 + progress * 0.014 + Math.cos(t * 0.9) * 0.003;
+
+    this.forceWireA.material.opacity = 0.028 + progress * 0.030;
+    this.forceWireB.material.opacity = 0.016 + progress * 0.018;
+
+    this.forceRingA.material.opacity = 0.028 + progress * 0.025;
+    this.forceRingB.material.opacity = 0.016 + progress * 0.016;
+
+    this.forceHalo.material.opacity = 0.018 + progress * 0.030;
+
+    const fs = 1.0 + Math.sin(t * 0.8) * 0.010;
     this.forcefield.scale.set(fs, fs, fs);
 
     this.root.traverse((obj, i = 0) => {
